@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import PriceChart from '@/components/PriceChart';
+import TradingPanel from '@/components/TradingPanel';
 
 export default function MarketDetailPage({ params }: { params: { id: string } }) {
     const { id } = params;
