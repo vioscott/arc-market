@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useBalance } from 'wagmi';
-import { CONTRACT_ADDRESSES } from '@/config/wagmi';
+import { CONTRACT_ADDRESSES, arcTestnetChain } from '@/config/wagmi';
 
 interface TradingPanelProps {
     marketId: number;
@@ -22,6 +22,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
     // Get USDC balance (native currency on Arc Testnet)
     const { data: usdcBalance } = useBalance({
         address: address,
+        chainId: arcTestnetChain.id,
     });
 
     useEffect(() => {

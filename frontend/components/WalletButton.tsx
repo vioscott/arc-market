@@ -15,6 +15,7 @@ export default function WalletButton() {
     // Get USDC balance (native currency on Arc Testnet)
     const { data: usdcBalance } = useBalance({
         address: address,
+        chainId: arcTestnetChain.id,
     });
 
     useEffect(() => {

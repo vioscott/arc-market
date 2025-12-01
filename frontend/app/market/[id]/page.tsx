@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import TradingPanel from '@/components/TradingPanel';
+import PriceChart from '@/components/PriceChart';
 
 export default function MarketDetailPage({ params }: { params: { id: string } }) {
     const { id } = params;
@@ -77,19 +77,12 @@ export default function MarketDetailPage({ params }: { params: { id: string } })
                             </a>
                         </div>
 
-                        {/* Price Chart Placeholder */}
-                        <div className="card">
-                            <h3 className="text-xl font-bold mb-4">Price History</h3>
-                            <div className="aspect-video bg-dark-bg rounded-xl flex items-center justify-center text-dark-muted">
-                                <div className="text-center">
-                                    <div className="text-4xl mb-2 flex justify-center">
-                                        <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                                        </svg>
-                                    </div>
-                                    <p>Price chart coming soon</p>
-                                </div>
-                            </div>
+                        {/* Price Chart */}
+                        <div className="card h-[400px]">
+                            <PriceChart
+                                currentYesPrice={market.yesPrice}
+                                currentNoPrice={market.noPrice}
+                            />
                         </div>
 
                         {/* Market Stats */}
