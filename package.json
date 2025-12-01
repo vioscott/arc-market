@@ -1,0 +1,15 @@
+{
+  "name": "arc-prediction-market",
+  "version": "1.0.0",
+  "description": "Decentralized prediction market on Arc Testnet",
+  "scripts": {
+    "compile": "cd contracts && npx hardhat compile",
+    "test": "cd contracts && npx hardhat test",
+    "deploy:testnet": "cd contracts && npx hardhat run scripts/deploy.ts --network arcTestnet",
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build"
+  },
+  "keywords": ["prediction-market", "arc-testnet", "defi", "web3"],
+  "author": "",
+  "license": "MIT"
+}
