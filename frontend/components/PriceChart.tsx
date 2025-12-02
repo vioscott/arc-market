@@ -76,6 +76,8 @@ export default function PriceChart({ data, currentYesPrice, currentNoPrice }: Pr
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
+            const yesVal = payload[0]?.value;
+            const noVal = payload[1]?.value;
             return (
                 <div className="bg-dark-card border border-dark-border p-3 rounded-lg shadow-xl">
                     <p className="text-dark-muted text-xs mb-2">
@@ -83,11 +85,13 @@ export default function PriceChart({ data, currentYesPrice, currentNoPrice }: Pr
                     </p>
                     <div className="space-y-1">
                         <p className="text-yes font-bold text-sm">
-                            YES: {(payload[0].value * 100).toFixed(1)}%
+                            YES: {(yesVal * 100).toFixed(1)}%
                         </p>
-                        <p className="text-no font-bold text-sm">
-                            NO: {(payload[1].value * 100).toFixed(1)}%
-                        </p>
+                        {typeof noVal === 'number' && (
+                            <p className="text-no font-bold text-sm">
+                                NO: {(noVal * 100).toFixed(1)}%
+                            </p>
+                        )}
                     </div>
                 </div>
             );
@@ -125,8 +129,8 @@ export default function PriceChart({ data, currentYesPrice, currentNoPrice }: Pr
                             key={range}
                             onClick={() => setTimeRange(range)}
                             className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${timeRange === range
-                                    ? 'bg-primary-500 text-white shadow-sm'
-                                    : 'text-dark-muted hover:text-white'
+                                ? 'bg-primary-500 text-white shadow-sm'
+                                : 'text-dark-muted hover:text-white'
                                 }`}
                         >
                             {range}

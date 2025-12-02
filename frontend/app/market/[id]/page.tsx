@@ -1,22 +1,29 @@
+// frontend/app/market/[id]/page.tsx
 'use client';
 
 import Link from 'next/link';
-import PriceChart from '@/components/PriceChart';
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+const PriceChart = dynamic(() => import('@/components/PriceChart'), {
+    ssr: false,
+    loading: () => <p className="text-sm text-dark-muted">Loading chart...</p>,
+});
 import TradingPanel from '@/components/TradingPanel';
 
 export default function MarketDetailPage({ params }: { params: { id: string } }) {
     const { id } = params;
 
-    // Mock data - will be replaced with real contract data
+    // Mock market data – replace with real contract data later
     const market = {
         id: parseInt(id),
         question: 'Will Bitcoin reach $100,000 by end of 2025?',
-        description: 'This market resolves to YES if Bitcoin (BTC) reaches or exceeds $100,000 USD on any major exchange (Coinbase, Binance, Kraken) before December 31, 2025 23:59:59 UTC.',
+        description:
+            'This market resolves to YES if Bitcoin (BTC) reaches or exceeds $100,000 USD on any major exchange before Dec 31 2025 23:59:59 UTC.',
         category: 'Crypto',
         sourceUrl: 'https://coinmarketcap.com/currencies/bitcoin/',
         creator: '0x1234...5678',
         createdAt: new Date('2025-01-01'),
-        closeTime: new Date('2025-12-31'),
+        closeTime: new Date('2025-12-31T23:59:59Z'),
         yesPrice: 0.65,
         noPrice: 0.35,
         volume: 12500,
@@ -26,8 +33,25 @@ export default function MarketDetailPage({ params }: { params: { id: string } })
         resolved: false,
     };
 
-    const timeRemaining = market.closeTime.getTime() - Date.now();
-    const daysRemaining = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+    // Countdown timer state
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const diff = market.closeTime.getTime() - Date.now();
+            if (diff <= 0) {
+                setTimeLeft('Closed');
+                clearInterval(interval);
+                return;
+            }
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const m = Math.floor((diff / (1000 * 60)) % 60);
+            const s = Math.floor((diff / 1000) % 60);
+            setTimeLeft(`${d}d ${h}h ${m}m ${s}s`);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="min-h-screen py-6 sm:py-12">
@@ -41,7 +65,7 @@ export default function MarketDetailPage({ params }: { params: { id: string } })
                     <span className="text-dark-text">{market.category}</span>
                 </div>
 
-                {/* Mobile Layout: Stack on small screens */}
+                {/* Layout */}
                 <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
@@ -52,7 +76,7 @@ export default function MarketDetailPage({ params }: { params: { id: string } })
                                     {market.category}
                                 </span>
                                 <span className="px-3 py-1 rounded-lg bg-dark-bg text-dark-muted text-sm">
-                                    {daysRemaining} days remaining
+                                    {timeLeft}
                                 </span>
                             </div>
 
@@ -60,9 +84,7 @@ export default function MarketDetailPage({ params }: { params: { id: string } })
                                 {market.question}
                             </h1>
 
-                            <p className="text-dark-muted mb-6 leading-relaxed">
-                                {market.description}
-                            </p>
+                            <p className="text-dark-muted mb-6 leading-relaxed">{market.description}</p>
 
                             {/* Source Link */}
                             <a
@@ -72,7 +94,12 @@ export default function MarketDetailPage({ params }: { params: { id: string } })
                                 className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors"
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                    />
                                 </svg>
                                 View Source
                             </a>
@@ -80,10 +107,7 @@ export default function MarketDetailPage({ params }: { params: { id: string } })
 
                         {/* Price Chart */}
                         <div className="card h-[400px]">
-                            <PriceChart
-                                currentYesPrice={market.yesPrice}
-                                currentNoPrice={market.noPrice}
-                            />
+                            <PriceChart currentYesPrice={market.yesPrice} currentNoPrice={market.noPrice} />
                         </div>
 
                         {/* Market Stats */}
@@ -92,11 +116,11 @@ export default function MarketDetailPage({ params }: { params: { id: string } })
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 <div>
                                     <p className="text-sm text-dark-muted mb-1">Total Volume</p>
-                                    <p className="text-xl font-bold">${market.volume.toLocaleString()}</p>
+                                    <p className="text-xl font-bold">{market.volume.toLocaleString()}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-dark-muted mb-1">Liquidity</p>
-                                    <p className="text-xl font-bold">${market.liquidity.toLocaleString()}</p>
+                                    <p className="text-xl font-bold">{market.liquidity.toLocaleString()}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-dark-muted mb-1">YES Shares</p>
@@ -139,49 +163,16 @@ export default function MarketDetailPage({ params }: { params: { id: string } })
                             </div>
                         </div>
 
-                        {/* Recent Trades - Mobile Optimized Table */}
+                        {/* Recent Trades – placeholder */}
                         <div className="card">
                             <h3 className="text-xl font-bold mb-4">Recent Trades</h3>
-                            <div className="overflow-x-auto -mx-4 sm:mx-0">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b border-dark-border">
-                                            <th className="text-left py-3 px-4 text-dark-muted font-medium">Outcome</th>
-                                            <th className="text-left py-3 px-4 text-dark-muted font-medium">Shares</th>
-                                            <th className="text-left py-3 px-4 text-dark-muted font-medium">Price</th>
-                                            <th className="text-left py-3 px-4 text-dark-muted font-medium">Time</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr className="border-b border-dark-border/50">
-                                            <td className="py-3 px-4">
-                                                <span className="px-2 py-1 rounded bg-yes/20 text-yes font-semibold">YES</span>
-                                            </td>
-                                            <td className="py-3 px-4 font-semibold">100</td>
-                                            <td className="py-3 px-4">65¢</td>
-                                            <td className="py-3 px-4 text-dark-muted">2 min ago</td>
-                                        </tr>
-                                        <tr className="border-b border-dark-border/50">
-                                            <td className="py-3 px-4">
-                                                <span className="px-2 py-1 rounded bg-no/20 text-no font-semibold">NO</span>
-                                            </td>
-                                            <td className="py-3 px-4 font-semibold">50</td>
-                                            <td className="py-3 px-4">35¢</td>
-                                            <td className="py-3 px-4 text-dark-muted">5 min ago</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <p className="text-dark-muted">(Trade data will appear here)</p>
                         </div>
                     </div>
 
-                    {/* Trading Panel - Sticky on desktop, inline on mobile */}
+                    {/* Trading Panel */}
                     <div className="lg:col-span-1">
-                        <TradingPanel
-                            marketId={market.id}
-                            yesPrice={market.yesPrice}
-                            noPrice={market.noPrice}
-                        />
+                        <TradingPanel marketId={market.id} yesPrice={market.yesPrice} noPrice={market.noPrice} />
                     </div>
                 </div>
             </div>

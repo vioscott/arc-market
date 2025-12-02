@@ -9,7 +9,16 @@
     "dev": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build"
   },
-  "keywords": ["prediction-market", "arc-testnet", "defi", "web3"],
+  "keywords": [
+    "prediction-market",
+    "arc-testnet",
+    "defi",
+    "web3"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "node-cron": "^4.2.1"
+  }
 }
