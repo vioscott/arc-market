@@ -1,6 +1,12 @@
-const hre = require("hardhat");
-const fs = require("fs");
-const path = require("path");
+import hre from "hardhat";
+const { ethers } = hre;
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 async function main() {
     console.log("🚀 Deploying Arc Prediction Market contracts...\n");
@@ -52,6 +58,12 @@ async function main() {
     await marketFactory.waitForDeployment();
     const marketFactoryAddress = await marketFactory.getAddress();
     console.log("✅ MarketFactory deployed to:", marketFactoryAddress);
+
+    // Set MarketFactory address in OutcomeToken
+    console.log("\n📝 Setting MarketFactory address in OutcomeToken...");
+    const setFactoryTx = await outcomeToken.setMarketFactory(marketFactoryAddress);
+    await setFactoryTx.wait();
+    console.log("✅ MarketFactory address set");
 
     // Transfer OutcomeToken ownership to MarketFactory
     console.log("\n📝 Transferring OutcomeToken ownership to MarketFactory...");

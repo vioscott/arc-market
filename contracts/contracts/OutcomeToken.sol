@@ -16,18 +16,32 @@ contract OutcomeToken is ERC1155, Ownable {
     // Market metadata
     mapping(uint256 => string) public marketQuestions;
     
+    // MarketFactory address (can authorize markets)
+    address public marketFactory;
+    
     event MarketAuthorized(address indexed market, bool authorized);
     event TokensMinted(address indexed to, uint256 indexed tokenId, uint256 amount);
     event TokensBurned(address indexed from, uint256 indexed tokenId, uint256 amount);
+    event MarketFactoryUpdated(address indexed newMarketFactory);
     
     constructor() ERC1155("https://api.arcprediction.market/metadata/{id}.json") Ownable(msg.sender) {}
+    
+    /**
+     * @notice Set the MarketFactory address
+     * @param _marketFactory Address of the MarketFactory contract
+     */
+    function setMarketFactory(address _marketFactory) external onlyOwner {
+        marketFactory = _marketFactory;
+        emit MarketFactoryUpdated(_marketFactory);
+    }
     
     /**
      * @notice Authorize or deauthorize a market contract
      * @param market Address of the market contract
      * @param authorized Whether the market is authorized
      */
-    function setMarketAuthorization(address market, bool authorized) external onlyOwner {
+    function setMarketAuthorization(address market, bool authorized) external {
+        require(msg.sender == owner() || msg.sender == marketFactory, "OutcomeToken: not authorized");
         authorizedMarkets[market] = authorized;
         emit MarketAuthorized(market, authorized);
     }

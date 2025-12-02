@@ -37,7 +37,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className="dark">
-            <body className={`${inter.variable} ${outfit.variable} antialiased`}>
+            <body className={`${inter.variable} ${outfit.variable} antialiased`} suppressHydrationWarning>
                 <Providers>
                     <div className="min-h-screen flex flex-col">
                         <Header />
