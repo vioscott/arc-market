@@ -6,7 +6,7 @@ import MarketCard from '@/components/MarketCard';
 
 function MarketsContent() {
     const searchParams = useSearchParams();
-    const initialCategory = searchParams.get('category') || 'all';
+    const initialCategory = searchParams?.get('category') || 'all';
 
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [searchQuery, setSearchQuery] = useState('');
