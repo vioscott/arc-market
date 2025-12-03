@@ -29,26 +29,36 @@ function saveStore() {
 
 // ---------- 1️⃣ FETCH DATA ---------- //
 // NBA – free API balldontlie (no key required)
+// NBA – Mock data (API is down/requires key)
 async function fetchNBAGames() {
-    try {
-        const today = new Date();
-        const start = today.toISOString().split("T")[0];
-        const end = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0];
-        const resp = await axios.get(
-            `https://www.balldontlie.io/api/v1/games?start_date=${start}&end_date=${end}&per_page=50`
-        );
-        return resp.data.data.map((g) => ({
-            eventId: g.id,
+    console.log("   🏀 Generating mock NBA games...");
+    const teams = [
+        "Lakers", "Warriors", "Celtics", "Heat", "Bucks", "Suns", "Nuggets", "76ers"
+    ];
+
+    const games = [];
+    const today = new Date();
+
+    // Generate 3 random games
+    for (let i = 0; i < 3; i++) {
+        const home = teams[Math.floor(Math.random() * teams.length)];
+        let visitor = teams[Math.floor(Math.random() * teams.length)];
+        while (visitor === home) {
+            visitor = teams[Math.floor(Math.random() * teams.length)];
+        }
+
+        const gameTime = new Date(today.getTime() + (i + 1) * 24 * 60 * 60 * 1000); // 1-3 days from now
+        const dateStr = gameTime.toLocaleDateString();
+
+        games.push({
+            eventId: `nba-mock-${Date.now()}-${i}`,
             eventType: "nba",
-            question: `Will ${g.home_team.full_name} beat ${g.visitor_team.full_name} on ${new Date(g.date).toLocaleDateString()}?`,
-            startTime: Math.floor(new Date(g.date).getTime() / 1000),
-        }));
-    } catch (error) {
-        console.warn('⚠️  NBA API failed:', error.message);
-        return [];
+            question: `Will ${home} beat ${visitor} on ${dateStr}?`,
+            startTime: Math.floor(gameTime.getTime() / 1000),
+        });
     }
+
+    return games;
 }
 
 // Weather – free API open‑meteo (no key). We'll use a few major cities.
@@ -142,7 +152,7 @@ async function main() {
 
     const factory = await ethers.getContractAt(
         "MarketFactory",
-        process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS
+        process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS || "0x7B661633B83Cb0FfCE227b3F498Be904429917a3"
     );
 
     const duration = CONFIG.marketDurationHours * 60 * 60;

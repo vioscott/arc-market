@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "./OutcomeToken.sol";
 
 /**
@@ -11,14 +12,14 @@ import "./OutcomeToken.sol";
  * @notice Prediction market with LMSR automated market maker
  * @dev Implements Logarithmic Market Scoring Rule for pricing
  */
-contract Market is ReentrancyGuard {
+contract Market is ReentrancyGuard, Initializable {
     using SafeERC20 for IERC20;
     
     // Market states
     enum MarketState { Active, Closed, Resolved }
     
     // Market configuration
-    uint256 public immutable marketId;
+    uint256 public marketId;
     string public question;
     string public sourceUrl;
     uint256 public closeTime;
@@ -33,9 +34,9 @@ contract Market is ReentrancyGuard {
     // Resolution
     MarketState public state;
     uint8 public winningOutcome; // 0 = YES, 1 = NO, 2 = Invalid
-    address public oracle;
     
-    // Contracts
+    // Contracts (Immutable in implementation)
+    address public immutable oracle;
     IERC20 public immutable usdc;
     OutcomeToken public immutable outcomeToken;
     
@@ -48,17 +49,26 @@ contract Market is ReentrancyGuard {
     event MarketResolved(uint8 winningOutcome);
     event SharesRedeemed(address indexed user, uint256 shares, uint256 payout);
     
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(
+        address _oracle,
+        address _usdc,
+        address _outcomeToken
+    ) {
+        oracle = _oracle;
+        usdc = IERC20(_usdc);
+        outcomeToken = OutcomeToken(_outcomeToken);
+        _disableInitializers();
+    }
+
+    function initialize(
         uint256 _marketId,
         string memory _question,
         string memory _sourceUrl,
         uint256 _closeTime,
         uint256 _liquidityParameter,
-        address _creator,
-        address _oracle,
-        address _usdc,
-        address _outcomeToken
-    ) {
+        address _creator
+    ) external initializer {
         require(_closeTime > block.timestamp, "Market: close time must be in future");
         require(_liquidityParameter > 0, "Market: liquidity parameter must be positive");
         
@@ -68,9 +78,6 @@ contract Market is ReentrancyGuard {
         closeTime = _closeTime;
         liquidityParameter = _liquidityParameter;
         creator = _creator;
-        oracle = _oracle;
-        usdc = IERC20(_usdc);
-        outcomeToken = OutcomeToken(_outcomeToken);
         createdAt = block.timestamp;
         state = MarketState.Active;
     }

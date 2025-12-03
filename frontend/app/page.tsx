@@ -1,7 +1,12 @@
+'use client';
+
 import Link from 'next/link';
 import { FAUCET_URLS } from '@/config/wagmi';
+import { useMarketStats } from '@/hooks/useMarketStats';
 
 export default function HomePage() {
+    const stats = useMarketStats();
+
     return (
         <div className="min-h-screen">
             {/* Hero Section - Mobile Optimized */}
@@ -47,10 +52,10 @@ export default function HomePage() {
                         {/* Stats - Mobile Grid */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mt-12 sm:mt-20">
                             {[
-                                { label: 'Total Volume', value: '$0.00', subtext: 'Testnet USDC' },
-                                { label: 'Active Markets', value: '0', subtext: 'Live now' },
-                                { label: 'Total Traders', value: '0', subtext: 'Participants' },
-                                { label: 'Avg. Accuracy', value: '0%', subtext: 'Predictions' },
+                                { label: 'Total Volume', value: stats.totalVolume, subtext: 'Testnet USDC' },
+                                { label: 'Active Markets', value: stats.activeMarkets, subtext: 'Live now' },
+                                { label: 'Total Traders', value: stats.totalTraders, subtext: 'Participants' },
+                                { label: 'Avg. Accuracy', value: stats.avgAccuracy, subtext: 'Predictions' },
                             ].map((stat, i) => (
                                 <div key={i} className="card text-center animate-fade-in" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
                                     <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-1">

@@ -94,7 +94,7 @@ contract OutcomeToken is ERC1155, Ownable {
      * @param question Market question
      */
     function setMarketQuestion(uint256 marketId, string memory question) external {
-        require(authorizedMarkets[msg.sender], "OutcomeToken: caller not authorized");
+        require(authorizedMarkets[msg.sender] || msg.sender == marketFactory || msg.sender == owner(), "OutcomeToken: caller not authorized");
         marketQuestions[marketId] = question;
     }
 }

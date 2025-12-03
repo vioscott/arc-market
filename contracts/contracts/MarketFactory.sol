@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./Market.sol";
 import "./OutcomeToken.sol";
 
@@ -10,6 +11,8 @@ import "./OutcomeToken.sol";
  * @notice Factory contract for creating and managing prediction markets
  */
 contract MarketFactory is Ownable {
+    using Clones for address;
+
     // Market registry
     Market[] public markets;
     mapping(address => bool) public isMarket;
@@ -18,6 +21,7 @@ contract MarketFactory is Ownable {
     address public immutable usdc;
     address public immutable outcomeToken;
     address public oracle;
+    address public immutable marketImplementation; // Master implementation
     uint256 public minLiquidityParameter;
     uint256 public marketCreationFee;
     
@@ -46,6 +50,9 @@ contract MarketFactory is Ownable {
         outcomeToken = _outcomeToken;
         oracle = _oracle;
         minLiquidityParameter = _minLiquidityParameter;
+        
+        // Deploy master implementation
+        marketImplementation = address(new Market(_oracle, _usdc, _outcomeToken));
     }
     
     /**
@@ -69,21 +76,18 @@ contract MarketFactory is Ownable {
         
         uint256 marketId = markets.length;
         
-        // Deploy new market
-        Market market = new Market(
+        // Deploy new market via Clone
+        marketAddress = marketImplementation.clone();
+        Market(marketAddress).initialize(
             marketId,
             question,
             sourceUrl,
             closeTime,
             liquidityParameter,
-            msg.sender,
-            oracle,
-            usdc,
-            outcomeToken
+            msg.sender
         );
         
-        marketAddress = address(market);
-        markets.push(market);
+        markets.push(Market(marketAddress));
         isMarket[marketAddress] = true;
         
         // Authorize market to mint/burn outcome tokens

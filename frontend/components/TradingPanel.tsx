@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAccount, useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES, arcTestnetChain } from '@/config/wagmi';
@@ -134,6 +134,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
         args: [address!, marketAddress as `0x${string}`],
         query: {
             enabled: !!address && !!marketAddress,
+            refetchInterval: 2000, // Poll every 2 seconds to catch approval changes
         }
     });
 
@@ -157,6 +158,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
 
     useEffect(() => {
         if (isApproveSuccess) {
+            // Force immediate refetch after approval
             refetchAllowance();
         }
     }, [isApproveSuccess, refetchAllowance]);
@@ -169,11 +171,52 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
     }, [isBuySuccess, selectedOutcome]);
 
     // Derived State
-    const cost = exactCost || 0n;
+    const cost = exactCost || BigInt(0);
     const hasAllowance = allowance ? allowance >= cost : false;
     const balance = usdcBalance ? parseFloat(usdcBalance.formatted) : 0;
     const hasInsufficientBalance = amount ? parseFloat(amount) > balance : false;
     const isProcessing = isApproving || isWaitingApprove || isBuying || isWaitingBuy;
+
+    // Debug logging
+    useEffect(() => {
+        if (allowance !== undefined && cost > BigInt(0)) {
+            console.log('Allowance check:', {
+                allowance: allowance.toString(),
+                cost: cost.toString(),
+                hasAllowance,
+                isApproveSuccess
+            });
+        }
+    }, [allowance, cost, hasAllowance, isApproveSuccess]);
+
+    // Track approval success
+    const [approvalSuccess, setApprovalSuccess] = React.useState(false);
+    const [buySuccess, setBuySuccess] = React.useState(false);
+
+    // Reset success states when amount changes
+    React.useEffect(() => {
+        setApprovalSuccess(false);
+        setBuySuccess(false);
+    }, [amount, selectedOutcome]);
+
+    // Show approval success message
+    React.useEffect(() => {
+        if (isApproveSuccess && !isWaitingApprove) {
+            setApprovalSuccess(true);
+            setTimeout(() => setApprovalSuccess(false), 3000);
+        }
+    }, [isApproveSuccess, isWaitingApprove]);
+
+    // Show buy success message
+    React.useEffect(() => {
+        if (isBuySuccess && !isWaitingBuy) {
+            setBuySuccess(true);
+            setTimeout(() => {
+                setBuySuccess(false);
+                setAmount('');
+            }, 5000);
+        }
+    }, [isBuySuccess, isWaitingBuy]);
 
     const handleMaxClick = () => {
         if (balance > 0) {
@@ -190,12 +233,13 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
         }
 
         if (!hasAllowance) {
-            // Approve
+            // Approve max amount to avoid needing multiple approvals
+            const maxUint256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
             writeApprove({
                 address: CONTRACT_ADDRESSES.USDC as `0x${string}`,
                 abi: ERC20_ABI,
                 functionName: 'approve',
-                args: [marketAddress, cost],
+                args: [marketAddress, maxUint256],
             });
         } else {
             // Buy
@@ -334,6 +378,29 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
                 </div>
             )}
 
+            {/* Success Messages */}
+            {approvalSuccess && (
+                <div className="mb-4 p-3 rounded-lg bg-yes/10 border border-yes/20">
+                    <p className="text-sm text-yes flex items-center gap-2">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        USDC approved! Now click "Buy Shares" to complete your trade.
+                    </p>
+                </div>
+            )}
+
+            {buySuccess && (
+                <div className="mb-4 p-3 rounded-lg bg-yes/10 border border-yes/20">
+                    <p className="text-sm text-yes flex items-center gap-2">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Success! You've purchased {estimatedSharesNum.toFixed(2)} {selectedOutcome.toUpperCase()} shares.
+                    </p>
+                </div>
+            )}
+
             {/* Action Button */}
             {!isConnected ? (
                 <button className="btn btn-primary w-full text-lg py-4">
@@ -351,7 +418,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                             </svg>
-                            {isApproving || isWaitingApprove ? 'Approving...' : 'Buying...'}
+                            {isWaitingApprove ? 'Waiting for approval...' : isApproving ? 'Approving...' : isWaitingBuy ? 'Waiting for confirmation...' : 'Processing...'}
                         </span>
                     ) : (
                         !hasAllowance ? `Approve USDC` : `Buy ${selectedOutcome.toUpperCase()} Shares`
@@ -366,9 +433,11 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>
-                        {!hasAllowance
-                            ? "You must approve USDC spending before trading."
-                            : "Confirm the transaction in your wallet to execute the trade."}
+                        {isWaitingApprove || isWaitingBuy
+                            ? "Please confirm the transaction in your wallet."
+                            : !hasAllowance
+                                ? "Step 1: Approve USDC spending. Step 2: Buy shares."
+                                : "Click 'Buy Shares' and confirm in your wallet to complete the trade."}
                     </span>
                 </p>
             </div>
