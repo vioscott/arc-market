@@ -444,3 +444,5 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
         </div>
     );
 }
+
+export default TradingPanel;
