@@ -14,7 +14,7 @@ function MarketsContent() {
 
     // Update category if URL changes
     useEffect(() => {
-        const category = searchParams.get('category');
+        const category = searchParams?.get('category');
         if (category) {
             setSelectedCategory(category);
         }
