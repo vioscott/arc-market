@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 
@@ -8,6 +8,11 @@ export default function CreateMarketPage() {
     const { isConnected } = useAccount();
     const router = useRouter();
     const [isCreating, setIsCreating] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const [formData, setFormData] = useState({
         question: '',
@@ -325,7 +330,7 @@ export default function CreateMarketPage() {
                     <div className="flex flex-col sm:flex-row gap-4">
                         <button
                             type="submit"
-                            disabled={!isConnected || isCreating}
+                            disabled={!mounted || !isConnected || isCreating}
                             className="btn btn-primary text-lg py-4 flex-1"
                         >
                             {isCreating ? (
@@ -336,7 +341,7 @@ export default function CreateMarketPage() {
                                     </svg>
                                     Creating Market...
                                 </span>
-                            ) : !isConnected ? (
+                            ) : !mounted || !isConnected ? (
                                 'Connect Wallet to Create'
                             ) : (
                                 'Create Market'

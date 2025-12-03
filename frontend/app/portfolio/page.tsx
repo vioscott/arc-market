@@ -1,12 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
 
 export default function PortfolioPage() {
     const { address, isConnected } = useAccount();
     const [activeTab, setActiveTab] = useState<'active' | 'redeemable' | 'history'>('active');
+    const [mounted, setMounted] = useState(false);
+
+    // Prevent hydration mismatch
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Mock data - will be replaced with real contract data
     const mockPositions = [
@@ -71,7 +77,7 @@ export default function PortfolioPage() {
     const totalValue = mockPositions.reduce((sum, pos) => sum + pos.value, 0);
     const totalPnL = mockPositions.reduce((sum, pos) => sum + pos.pnl, 0);
 
-    if (!isConnected) {
+    if (!mounted || !isConnected) {
         return (
             <div className="min-h-screen py-12 sm:py-20">
                 <div className="container-mobile">
