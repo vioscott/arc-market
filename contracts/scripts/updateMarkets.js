@@ -3,6 +3,11 @@ import { ethers } from "hardhat";
 import axios from "axios";
 import * as fs from "fs";
 import path from "path";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const STORE_PATH = path.resolve(__dirname, "createdMarkets.json");
 let store = {};
@@ -26,7 +31,7 @@ async function fetchNBAStatus(eventId) {
 async function fetchWeatherTemp(event) {
     // event contains resolveTime and city info encoded in eventId e.g. "New York-<timestamp>"
     const [city] = event.eventId.split("-");
-    const cityMap: any = {
+    const cityMap = {
         "New York": { lat: 40.7128, lon: -74.006 },
         "London": { lat: 51.5074, lon: -0.1278 },
         "Tokyo": { lat: 35.6895, lon: 139.6917 },
@@ -38,7 +43,7 @@ async function fetchWeatherTemp(event) {
     );
     const times = resp.data.hourly.time;
     const temps = resp.data.hourly.temperature_2m;
-    const idx = times.findIndex((t: string) => new Date(t).getTime() / 1000 >= event.resolveTime);
+    const idx = times.findIndex((t) => new Date(t).getTime() / 1000 >= event.resolveTime);
     return idx !== -1 ? temps[idx] : null;
 }
 
@@ -56,21 +61,21 @@ async function main() {
 
     const factory = await ethers.getContractAt(
         "MarketFactory",
-        process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS!
+        process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS
     );
     const oracle = await ethers.getContractAt(
         "Oracle",
-        process.env.NEXT_PUBLIC_ORACLE_ADDRESS!
+        process.env.NEXT_PUBLIC_ORACLE_ADDRESS
     );
 
     const now = Math.floor(Date.now() / 1000);
 
     for (const [question, meta] of Object.entries(store)) {
         const market = await ethers.getContractAt("Market", meta.marketAddress);
-        const status = await market.status(); // 0=open,1=closed,2=resolved (adjust if different)
+        const state = await market.state(); // 0=Active,1=Closed,2=Resolved
 
         // 1️⃣ Close market when event starts (if not already closed)
-        if (status === 0 && now >= meta.startTime) {
+        if (state === 0 && now >= meta.startTime) {
             // For NBA we also check that the game has actually started (status not "Scheduled")
             let shouldClose = true;
             if (meta.eventType === "nba") {
@@ -79,13 +84,13 @@ async function main() {
             }
             if (shouldClose) {
                 console.log(`⏰ Closing market: ${question}`);
-                await market.close();
+                await market.closeMarket();
             }
         }
 
         // 2️⃣ Resolve market when event is finished and market still open/closed
-        if (status !== 2 && now >= meta.resolveTime) {
-            let outcome: number | null = null; // 0 = YES, 1 = NO
+        if (state !== 2 && now >= meta.resolveTime) {
+            let outcome = null; // 0 = YES, 1 = NO
             if (meta.eventType === "nba") {
                 const nbaStatus = await fetchNBAStatus(meta.eventId);
                 if (nbaStatus === "Final") {
@@ -101,14 +106,13 @@ async function main() {
                 }
             } else if (meta.eventType === "crypto") {
                 const price = await fetchCryptoPrice();
-                outcome = price > 30000 ? 0 : 1; // YES if >30k USD
+                outcome = price > 100000 ? 0 : 1; // YES if >100k USD
             }
 
             if (outcome !== null) {
                 console.log(`✅ Resolving market: ${question} → ${outcome === 0 ? "YES" : "NO"}`);
-                // Set result in Oracle then resolve market (adjust if your contract differs)
-                await oracle.setResult(meta.marketAddress, outcome);
-                await market.resolve();
+                // Use emergencyResolve since deployer has ADMIN_ROLE
+                await oracle.emergencyResolve(meta.marketAddress, outcome);
                 // Mark as resolved locally
                 meta.resolved = true;
                 saveStore();

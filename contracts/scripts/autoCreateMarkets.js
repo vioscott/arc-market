@@ -134,7 +134,25 @@ async function createMarket(factory, question, startTime, duration, extra) {
         liquidityParameter
     );
     const receipt = await tx.wait();
-    const marketAddress = receipt.events?.[0]?.args?.market;
+
+    // Parse the MarketCreated event
+    let marketAddress;
+    for (const log of receipt.logs) {
+        try {
+            const parsed = factory.interface.parseLog(log);
+            if (parsed && parsed.name === 'MarketCreated') {
+                marketAddress = parsed.args.marketAddress;
+                break;
+            }
+        } catch (e) {
+            // Not a factory event, continue
+        }
+    }
+
+    if (!marketAddress) {
+        throw new Error('MarketCreated event not found in transaction receipt');
+    }
+
     console.log(`✅ Market created: ${question}\n   → ${marketAddress}`);
     store[question] = {
         marketAddress,
