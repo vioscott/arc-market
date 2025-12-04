@@ -1,81 +1,68 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import Link from 'next/link';
+import { usePortfolio } from '@/hooks/usePortfolio';
+import { parseUnits } from 'viem';
+
+const MARKET_ABI = [
+    {
+        inputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
+        name: 'redeemShares',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+    },
+] as const;
 
 export default function PortfolioPage() {
     const { address, isConnected } = useAccount();
     const [activeTab, setActiveTab] = useState<'active' | 'redeemable' | 'history'>('active');
     const [mounted, setMounted] = useState(false);
 
+    const { positions, redeemable, isLoading } = usePortfolio();
+
+    // Redemption State
+    const { data: hash, writeContract, isPending } = useWriteContract();
+    const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+        hash,
+    });
+
     // Prevent hydration mismatch
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Mock data - will be replaced with real contract data
-    const mockPositions = [
-        {
-            marketId: 1,
-            question: 'Will Bitcoin reach $100,000 by end of 2025?',
-            outcome: 'YES',
-            shares: 100,
-            avgPrice: 0.65,
-            currentPrice: 0.68,
-            value: 68,
-            pnl: 3,
-            pnlPercent: 4.6,
-        },
-        {
-            marketId: 2,
-            question: 'Will Ethereum merge succeed?',
-            outcome: 'NO',
-            shares: 50,
-            avgPrice: 0.18,
-            currentPrice: 0.15,
-            value: 7.5,
-            pnl: -1.5,
-            pnlPercent: -16.7,
-        },
-    ];
+    const handleRedeem = (marketAddress: string, shares: number) => {
+        try {
+            // Convert shares to 18 decimals (wei)
+            // Note: shares from hook are already formatted numbers, so we need to parse back
+            // But better to keep BigInt in hook? For now, let's assume precision is fine for UI actions
+            // or just redeem all.
+            // Actually, redeemShares takes uint256 amount.
+            // Let's use a safe conversion or fetch raw balance if needed.
+            // For MVP, parsing the number back to string is okay if we handle decimals carefully.
+            // Or better: just pass the raw BigInt from the hook if we exposed it.
+            // Since we didn't expose raw BigInt, let's re-parse.
+            const amount = parseUnits(shares.toString(), 18);
 
-    const mockRedeemable = [
-        {
-            marketId: 3,
-            question: 'Did the Lakers win?',
-            outcome: 'YES',
-            shares: 75,
-            winningOutcome: 'YES',
-            payout: 75,
-        },
-    ];
+            writeContract({
+                address: marketAddress as `0x${string}`,
+                abi: MARKET_ABI,
+                functionName: 'redeemShares',
+                args: [amount],
+            });
+        } catch (error) {
+            console.error("Redemption failed:", error);
+        }
+    };
 
-    const mockHistory = [
-        {
-            id: 1,
-            type: 'BUY',
-            market: 'Will Bitcoin reach $100,000?',
-            outcome: 'YES',
-            shares: 100,
-            price: 0.65,
-            total: 65,
-            timestamp: new Date('2025-01-15'),
-        },
-        {
-            id: 2,
-            type: 'SELL',
-            market: 'Will Ethereum merge succeed?',
-            outcome: 'NO',
-            shares: 25,
-            price: 0.16,
-            total: 4,
-            timestamp: new Date('2025-01-14'),
-        },
-    ];
-
-    const totalValue = mockPositions.reduce((sum, pos) => sum + pos.value, 0);
-    const totalPnL = mockPositions.reduce((sum, pos) => sum + pos.pnl, 0);
+    const totalValue = positions.reduce((sum, pos) => sum + pos.value, 0);
+    // P&L calculation is tricky without historical cost basis. 
+    // For MVP, we might show current value only or assume cost basis if we tracked it (we don't yet).
+    // So let's just show Value for now and hide P&L or set to 0.
+    const totalPnL = 0;
 
     if (!mounted || !isConnected) {
         return (
@@ -123,20 +110,20 @@ export default function PortfolioPage() {
                     </div>
                     <div className="card">
                         <p className="text-sm text-dark-muted mb-1">Total P&L</p>
-                        <p className={`text-2xl sm:text-3xl font-bold ${totalPnL >= 0 ? 'text-yes' : 'text-no'}`}>
-                            {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}
+                        <p className="text-2xl sm:text-3xl font-bold text-dark-muted">
+                            --
                         </p>
                     </div>
                     <div className="card">
                         <p className="text-sm text-dark-muted mb-1">Active Positions</p>
                         <p className="text-2xl sm:text-3xl font-bold">
-                            {mockPositions.length}
+                            {positions.length}
                         </p>
                     </div>
                     <div className="card">
                         <p className="text-sm text-dark-muted mb-1">Redeemable</p>
                         <p className="text-2xl sm:text-3xl font-bold text-yes">
-                            {mockRedeemable.length}
+                            {redeemable.length}
                         </p>
                     </div>
                 </div>
@@ -160,7 +147,7 @@ export default function PortfolioPage() {
                                 : 'bg-dark-card text-dark-muted hover:bg-dark-border'
                                 }`}
                         >
-                            Redeemable ({mockRedeemable.length})
+                            Redeemable ({redeemable.length})
                         </button>
                         <button
                             onClick={() => setActiveTab('history')}
@@ -174,11 +161,19 @@ export default function PortfolioPage() {
                     </div>
                 </div>
 
+                {/* Loading State */}
+                {isLoading && (
+                    <div className="text-center py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                        <p className="text-dark-muted">Loading portfolio...</p>
+                    </div>
+                )}
+
                 {/* Active Positions */}
-                {activeTab === 'active' && (
+                {!isLoading && activeTab === 'active' && (
                     <div className="space-y-4">
-                        {mockPositions.map((position) => (
-                            <div key={position.marketId} className="card-hover">
+                        {positions.map((position) => (
+                            <div key={`${position.marketId}-${position.outcome}`} className="card-hover">
                                 <Link href={`/market/${position.marketId}`}>
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <div className="flex-1">
@@ -191,7 +186,7 @@ export default function PortfolioPage() {
                                                     {position.outcome}
                                                 </span>
                                                 <span className="text-dark-muted">
-                                                    {position.shares} shares @ {(position.avgPrice * 100).toFixed(1)}¢
+                                                    {position.shares.toFixed(2)} shares @ {(position.currentPrice * 100).toFixed(1)}¢
                                                 </span>
                                             </div>
                                         </div>
@@ -200,22 +195,13 @@ export default function PortfolioPage() {
                                                 <p className="text-sm text-dark-muted mb-1">Value</p>
                                                 <p className="text-xl font-bold">${position.value.toFixed(2)}</p>
                                             </div>
-                                            <div className="flex-1 sm:flex-none">
-                                                <p className="text-sm text-dark-muted mb-1">P&L</p>
-                                                <p className={`text-xl font-bold ${position.pnl >= 0 ? 'text-yes' : 'text-no'}`}>
-                                                    {position.pnl >= 0 ? '+' : ''}${position.pnl.toFixed(2)}
-                                                    <span className="text-sm ml-1">
-                                                        ({position.pnlPercent >= 0 ? '+' : ''}{position.pnlPercent.toFixed(1)}%)
-                                                    </span>
-                                                </p>
-                                            </div>
                                         </div>
                                     </div>
                                 </Link>
                             </div>
                         ))}
 
-                        {mockPositions.length === 0 && (
+                        {positions.length === 0 && (
                             <div className="card text-center py-12">
                                 <div className="text-6xl mb-4 flex justify-center text-dark-muted">
                                     <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -235,10 +221,16 @@ export default function PortfolioPage() {
                 )}
 
                 {/* Redeemable */}
-                {activeTab === 'redeemable' && (
+                {!isLoading && activeTab === 'redeemable' && (
                     <div className="space-y-4">
-                        {mockRedeemable.map((position) => (
-                            <div key={position.marketId} className="card">
+                        {isSuccess && (
+                            <div className="bg-green-500/10 border border-green-500/20 text-green-500 p-4 rounded-lg mb-4">
+                                Redemption successful! Check your wallet balance.
+                            </div>
+                        )}
+
+                        {redeemable.map((position) => (
+                            <div key={`${position.marketId}-${position.outcome}`} className="card">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div className="flex-1">
                                         <h3 className="font-bold mb-2">{position.question}</h3>
@@ -247,7 +239,7 @@ export default function PortfolioPage() {
                                                 Won: {position.winningOutcome}
                                             </span>
                                             <span className="text-dark-muted">
-                                                {position.shares} shares
+                                                {position.shares.toFixed(2)} shares
                                             </span>
                                         </div>
                                     </div>
@@ -255,18 +247,22 @@ export default function PortfolioPage() {
                                         <div>
                                             <p className="text-sm text-dark-muted mb-1">Payout</p>
                                             <p className="text-2xl font-bold text-yes">
-                                                ${position.payout.toFixed(2)}
+                                                ${position.payout?.toFixed(2)}
                                             </p>
                                         </div>
-                                        <button className="btn btn-yes px-6 py-3">
-                                            Redeem
+                                        <button
+                                            onClick={() => handleRedeem(position.marketAddress, position.shares)}
+                                            disabled={isPending || isConfirming}
+                                            className="btn btn-yes px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isPending || isConfirming ? 'Redeeming...' : 'Redeem'}
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         ))}
 
-                        {mockRedeemable.length === 0 && (
+                        {redeemable.length === 0 && (
                             <div className="card text-center py-12">
                                 <div className="text-6xl mb-4 flex justify-center text-dark-muted">
                                     <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -283,57 +279,17 @@ export default function PortfolioPage() {
                 )}
 
                 {/* History */}
-                {activeTab === 'history' && (
-                    <div className="card overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-dark-border">
-                                    <th className="text-left py-3 px-2 text-dark-muted font-medium">Type</th>
-                                    <th className="text-left py-3 px-2 text-dark-muted font-medium">Market</th>
-                                    <th className="text-left py-3 px-2 text-dark-muted font-medium">Outcome</th>
-                                    <th className="text-right py-3 px-2 text-dark-muted font-medium">Shares</th>
-                                    <th className="text-right py-3 px-2 text-dark-muted font-medium">Price</th>
-                                    <th className="text-right py-3 px-2 text-dark-muted font-medium">Total</th>
-                                    <th className="text-right py-3 px-2 text-dark-muted font-medium">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {mockHistory.map((trade) => (
-                                    <tr key={trade.id} className="border-b border-dark-border/50 hover:bg-dark-bg/50">
-                                        <td className="py-3 px-2">
-                                            <span className={`px-2 py-1 rounded text-xs font-semibold ${trade.type === 'BUY'
-                                                ? 'bg-yes/20 text-yes'
-                                                : 'bg-no/20 text-no'
-                                                }`}>
-                                                {trade.type}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-2 max-w-xs truncate">{trade.market}</td>
-                                        <td className="py-3 px-2">{trade.outcome}</td>
-                                        <td className="py-3 px-2 text-right font-semibold">{trade.shares}</td>
-                                        <td className="py-3 px-2 text-right">{(trade.price * 100).toFixed(1)}¢</td>
-                                        <td className="py-3 px-2 text-right font-semibold">${trade.total.toFixed(2)}</td>
-                                        <td className="py-3 px-2 text-right text-dark-muted">
-                                            {trade.timestamp.toLocaleDateString()}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
-                        {mockHistory.length === 0 && (
-                            <div className="text-center py-12">
-                                <div className="text-6xl mb-4 flex justify-center text-dark-muted">
-                                    <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-xl font-bold mb-2">No trading history</h3>
-                                <p className="text-dark-muted">
-                                    Your trades will appear here
-                                </p>
-                            </div>
-                        )}
+                {!isLoading && activeTab === 'history' && (
+                    <div className="card text-center py-12">
+                        <div className="text-6xl mb-4 flex justify-center text-dark-muted">
+                            <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 className="text-xl font-bold mb-2">Transaction History</h3>
+                        <p className="text-dark-muted">
+                            Coming soon: View your full trading history
+                        </p>
                     </div>
                 )}
             </div>

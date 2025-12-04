@@ -151,6 +151,16 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
         hash: buyTxHash,
     });
 
+    // Track auto-buy state
+    const [shouldAutoBuy, setShouldAutoBuy] = useState(false);
+
+    // Derived State (must be before useEffect hooks that use these values)
+    const cost = exactCost || BigInt(0);
+    const hasAllowance = allowance ? allowance >= cost : false;
+    const balance = usdcBalance ? parseFloat(usdcBalance.formatted) : 0;
+    const hasInsufficientBalance = amount ? parseFloat(amount) > balance : false;
+    const isProcessing = isApproving || isWaitingApprove || isBuying || isWaitingBuy;
+
     // Effects
     useEffect(() => {
         setMounted(true);
@@ -159,23 +169,29 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
     useEffect(() => {
         if (isApproveSuccess) {
             // Force immediate refetch after approval
-            refetchAllowance();
+            refetchAllowance().then(() => {
+                if (shouldAutoBuy) {
+                    // Trigger buy automatically
+                    const maxCost = cost * BigInt(101) / BigInt(100);
+                    writeBuy({
+                        address: marketAddress,
+                        abi: MARKET_ABI,
+                        functionName: 'buyShares',
+                        args: [selectedOutcome === 'yes' ? 0 : 1, sharesAmount, maxCost],
+                    });
+                    setShouldAutoBuy(false);
+                }
+            });
         }
-    }, [isApproveSuccess, refetchAllowance]);
+    }, [isApproveSuccess, refetchAllowance, shouldAutoBuy, cost, marketAddress, selectedOutcome, sharesAmount, writeBuy]);
 
     useEffect(() => {
         if (isBuySuccess) {
-            alert(`Successfully bought ${selectedOutcome.toUpperCase()} shares!`);
+            // alert(`Successfully bought ${selectedOutcome.toUpperCase()} shares!`); // Removed alert in favor of UI message
             setAmount('');
+            setShouldAutoBuy(false);
         }
     }, [isBuySuccess, selectedOutcome]);
-
-    // Derived State
-    const cost = exactCost || BigInt(0);
-    const hasAllowance = allowance ? allowance >= cost : false;
-    const balance = usdcBalance ? parseFloat(usdcBalance.formatted) : 0;
-    const hasInsufficientBalance = amount ? parseFloat(amount) > balance : false;
-    const isProcessing = isApproving || isWaitingApprove || isBuying || isWaitingBuy;
 
     // Debug logging
     useEffect(() => {
@@ -234,6 +250,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
 
         if (!hasAllowance) {
             // Approve max amount to avoid needing multiple approvals
+            setShouldAutoBuy(true);
             const maxUint256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
             writeApprove({
                 address: CONTRACT_ADDRESSES.USDC as `0x${string}`,
@@ -289,20 +306,22 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
             <div className="grid grid-cols-2 gap-3 mb-6">
                 <button
                     onClick={() => setSelectedOutcome('yes')}
+                    disabled={isProcessing}
                     className={`tap-target py-4 rounded-xl font-bold transition-all ${selectedOutcome === 'yes'
                         ? 'bg-yes text-white shadow-glow-yes'
                         : 'bg-yes/10 text-yes border border-yes/20'
-                        }`}
+                        } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     <div className="text-sm mb-1">YES</div>
                     <div className="text-2xl">{(yesPrice * 100).toFixed(0)}¢</div>
                 </button>
                 <button
                     onClick={() => setSelectedOutcome('no')}
+                    disabled={isProcessing}
                     className={`tap-target py-4 rounded-xl font-bold transition-all ${selectedOutcome === 'no'
                         ? 'bg-no text-white shadow-glow-no'
                         : 'bg-no/10 text-no border border-no/20'
-                        }`}
+                        } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     <div className="text-sm mb-1">NO</div>
                     <div className="text-2xl">{(noPrice * 100).toFixed(0)}¢</div>
@@ -335,13 +354,15 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
                             setAmount(e.target.value);
                             setError('');
                         }}
-                        className={`input pr-20 text-lg ${hasInsufficientBalance && amount ? 'border-no' : ''}`}
+                        disabled={isProcessing}
+                        className={`input pr-20 text-lg ${hasInsufficientBalance && amount ? 'border-no' : ''} ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                         min="0"
                         step="0.01"
                     />
                     <button
                         onClick={handleMaxClick}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 rounded-lg bg-primary-500/20 text-primary-400 text-sm font-medium hover:bg-primary-500/30 transition-colors"
+                        disabled={isProcessing}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 rounded-lg bg-primary-500/20 text-primary-400 text-sm font-medium hover:bg-primary-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         MAX
                     </button>
@@ -385,7 +406,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        USDC approved! Now click "Buy Shares" to complete your trade.
+                        USDC approved! Proceeding to buy...
                     </p>
                 </div>
             )}
@@ -421,7 +442,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
                             {isWaitingApprove ? 'Waiting for approval...' : isApproving ? 'Approving...' : isWaitingBuy ? 'Waiting for confirmation...' : 'Processing...'}
                         </span>
                     ) : (
-                        !hasAllowance ? `Approve USDC` : `Buy ${selectedOutcome.toUpperCase()} Shares`
+                        `Buy ${selectedOutcome.toUpperCase()} Shares`
                     )}
                 </button>
             )}
@@ -433,11 +454,13 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>
-                        {isWaitingApprove || isWaitingBuy
-                            ? "Please confirm the transaction in your wallet."
-                            : !hasAllowance
-                                ? "Step 1: Approve USDC spending. Step 2: Buy shares."
-                                : "Click 'Buy Shares' and confirm in your wallet to complete the trade."}
+                        {isWaitingApprove
+                            ? "Please approve the USDC transaction in your wallet."
+                            : isWaitingBuy
+                                ? "Please confirm the buy transaction in your wallet."
+                                : !hasAllowance
+                                    ? "This will require two transactions: 1. Approve USDC 2. Buy Shares."
+                                    : "Click 'Buy Shares' and confirm in your wallet to complete the trade."}
                     </span>
                 </p>
             </div>
