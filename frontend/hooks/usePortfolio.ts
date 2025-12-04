@@ -106,7 +106,7 @@ export function usePortfolio() {
 
     // 3. Prepare contract reads for all markets
     // We need: MarketId, Question, State, WinningOutcome, Prices, YES Balance, NO Balance
-    const contracts = [];
+    const contracts: any[] = [];
     if (marketAddresses && address) {
         marketAddresses.forEach((marketAddr) => {
             // Market details
@@ -138,7 +138,7 @@ export function usePortfolio() {
     // If we assume marketId matches the index in the markets array (0, 1, 2...), we can predict token IDs.
     // MarketFactory assigns marketId = markets.length. So yes, index i has marketId i.
 
-    const balanceContracts = [];
+    const balanceContracts: any[] = [];
     if (marketAddresses && address) {
         marketAddresses.forEach((_, index) => {
             const marketId = index; // Assumption based on MarketFactory logic
