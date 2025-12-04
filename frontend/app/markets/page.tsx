@@ -11,6 +11,7 @@ function MarketsContent() {
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('volume');
+    const [displayCount, setDisplayCount] = useState(6); // Show 6 markets initially
 
     // Update category if URL changes
     useEffect(() => {
@@ -120,6 +121,19 @@ function MarketsContent() {
         return matchesCategory && matchesSearch;
     });
 
+    // Slice markets based on displayCount
+    const displayedMarkets = filteredMarkets.slice(0, displayCount);
+    const hasMore = displayCount < filteredMarkets.length;
+
+    const handleLoadMore = () => {
+        setDisplayCount(prev => prev + 6); // Load 6 more markets
+    };
+
+    // Reset displayCount when filters change
+    useEffect(() => {
+        setDisplayCount(6);
+    }, [selectedCategory, searchQuery]);
+
     return (
         <div className="min-h-screen py-8 sm:py-12">
             <div className="container-mobile">
@@ -192,9 +206,9 @@ function MarketsContent() {
                 </div>
 
                 {/* Markets Grid - Responsive */}
-                {filteredMarkets.length > 0 ? (
+                {displayedMarkets.length > 0 ? (
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                        {filteredMarkets.map((market) => (
+                        {displayedMarkets.map((market) => (
                             <MarketCard key={market.id} {...market} />
                         ))}
                     </div>
@@ -216,10 +230,13 @@ function MarketsContent() {
                 )}
 
                 {/* Load More - Mobile Friendly */}
-                {filteredMarkets.length > 0 && (
+                {hasMore && (
                     <div className="mt-8 sm:mt-12 text-center">
-                        <button className="btn btn-secondary px-8 py-3">
-                            Load More Markets
+                        <button
+                            onClick={handleLoadMore}
+                            className="btn btn-secondary px-8 py-3"
+                        >
+                            Load More Markets ({filteredMarkets.length - displayCount} remaining)
                         </button>
                     </div>
                 )}

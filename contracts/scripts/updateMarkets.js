@@ -1,5 +1,6 @@
 // contracts/scripts/updateMarkets.js
-import { ethers } from "hardhat";
+import hre from "hardhat";
+const { ethers } = hre;
 import axios from "axios";
 import * as fs from "fs";
 import path from "path";
@@ -70,53 +71,73 @@ async function main() {
 
     const now = Math.floor(Date.now() / 1000);
 
-    for (const [question, meta] of Object.entries(store)) {
-        const market = await ethers.getContractAt("Market", meta.marketAddress);
-        const state = await market.state(); // 0=Active,1=Closed,2=Resolved
+    const marketEntries = Object.entries(store);
 
-        // 1️⃣ Close market when event starts (if not already closed)
-        if (state === 0 && now >= meta.startTime) {
-            // For NBA we also check that the game has actually started (status not "Scheduled")
-            let shouldClose = true;
-            if (meta.eventType === "nba") {
-                const nbaStatus = await fetchNBAStatus(meta.eventId);
-                shouldClose = nbaStatus !== "Scheduled"; // close when not scheduled
-            }
-            if (shouldClose) {
-                console.log(`⏰ Closing market: ${question}`);
-                await market.closeMarket();
-            }
+    if (marketEntries.length === 0) {
+        console.log('ℹ️  No markets found in createdMarkets.json');
+        console.log('   Run autoCreateMarkets.js first to create markets.');
+        return;
+    }
+
+    console.log(`📊 Checking ${marketEntries.length} markets...`);
+
+    for (const [question, meta] of marketEntries) {
+        // Validate market data
+        if (!meta.marketAddress) {
+            console.warn(`⚠️  Skipping market "${question}" - missing marketAddress`);
+            continue;
         }
 
-        // 2️⃣ Resolve market when event is finished and market still open/closed
-        if (state !== 2 && now >= meta.resolveTime) {
-            let outcome = null; // 0 = YES, 1 = NO
-            if (meta.eventType === "nba") {
-                const nbaStatus = await fetchNBAStatus(meta.eventId);
-                if (nbaStatus === "Final") {
-                    // fetch final score to decide outcome
-                    const resp = await axios.get(`https://www.balldontlie.io/api/v1/games/${meta.eventId}`);
-                    const game = resp.data;
-                    outcome = game.home_team_score > game.visitor_team_score ? 0 : 1;
+        try {
+            const market = await ethers.getContractAt("Market", meta.marketAddress);
+            const state = await market.state(); // 0=Active,1=Closed,2=Resolved
+
+            // 1️⃣ Close market when event starts (if not already closed)
+            if (state === 0 && now >= meta.startTime) {
+                // For NBA we also check that the game has actually started (status not "Scheduled")
+                let shouldClose = true;
+                if (meta.eventType === "nba") {
+                    const nbaStatus = await fetchNBAStatus(meta.eventId);
+                    shouldClose = nbaStatus !== "Scheduled"; // close when not scheduled
                 }
-            } else if (meta.eventType === "weather") {
-                const temp = await fetchWeatherTemp(meta);
-                if (temp !== null) {
-                    outcome = temp > 30 ? 0 : 1; // YES if >30°C
+                if (shouldClose) {
+                    console.log(`⏰ Closing market: ${question}`);
+                    await market.closeMarket();
                 }
-            } else if (meta.eventType === "crypto") {
-                const price = await fetchCryptoPrice();
-                outcome = price > 100000 ? 0 : 1; // YES if >100k USD
             }
 
-            if (outcome !== null) {
-                console.log(`✅ Resolving market: ${question} → ${outcome === 0 ? "YES" : "NO"}`);
-                // Use emergencyResolve since deployer has ADMIN_ROLE
-                await oracle.emergencyResolve(meta.marketAddress, outcome);
-                // Mark as resolved locally
-                meta.resolved = true;
-                saveStore();
+            // 2️⃣ Resolve market when event is finished and market still open/closed
+            if (state !== 2 && now >= meta.resolveTime) {
+                let outcome = null; // 0 = YES, 1 = NO
+                if (meta.eventType === "nba") {
+                    const nbaStatus = await fetchNBAStatus(meta.eventId);
+                    if (nbaStatus === "Final") {
+                        // fetch final score to decide outcome
+                        const resp = await axios.get(`https://www.balldontlie.io/api/v1/games/${meta.eventId}`);
+                        const game = resp.data;
+                        outcome = game.home_team_score > game.visitor_team_score ? 0 : 1;
+                    }
+                } else if (meta.eventType === "weather") {
+                    const temp = await fetchWeatherTemp(meta);
+                    if (temp !== null) {
+                        outcome = temp > 30 ? 0 : 1; // YES if >30°C
+                    }
+                } else if (meta.eventType === "crypto") {
+                    const price = await fetchCryptoPrice();
+                    outcome = price > 100000 ? 0 : 1; // YES if >100k USD
+                }
+
+                if (outcome !== null) {
+                    console.log(`✅ Resolving market: ${question} → ${outcome === 0 ? "YES" : "NO"}`);
+                    // Use emergencyResolve since deployer has ADMIN_ROLE
+                    await oracle.emergencyResolve(meta.marketAddress, outcome);
+                    // Mark as resolved locally
+                    meta.resolved = true;
+                    saveStore();
+                }
             }
+        } catch (error) {
+            console.error(`❌ Error processing market "${question}":`, error.message);
         }
     }
 }
