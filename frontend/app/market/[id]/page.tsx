@@ -1,178 +1,183 @@
-// frontend/app/market/[id]/page.tsx
 'use client';
 
-import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-const PriceChart = dynamic(() => import('@/components/PriceChart'), {
-    ssr: false,
-    loading: () => <p className="text-sm text-dark-muted">Loading chart...</p>,
-});
+import Link from 'next/link';
 import TradingPanel from '@/components/TradingPanel';
+import ClaimPanel from '@/components/ClaimPanel';
+import { useMarket } from '@/hooks/useMarket';
+import { formatTimeRemaining, getMarketStatus, formatPrice } from '@/utils/ammCalculations';
+import type { Market } from '@/hooks/useMarkets';
 
-export default function MarketDetailPage({ params }: { params: { id: string } }) {
-    const { id } = params;
-
-    // Mock market data – replace with real contract data later
-    const market = {
-        id: parseInt(id),
-        question: 'Will Bitcoin reach $100,000 by end of 2025?',
-        description:
-            'This market resolves to YES if Bitcoin (BTC) reaches or exceeds $100,000 USD on any major exchange before Dec 31 2025 23:59:59 UTC.',
-        category: 'Crypto',
-        sourceUrl: 'https://coinmarketcap.com/currencies/bitcoin/',
-        creator: '0x1234...5678',
-        createdAt: new Date('2025-01-01'),
-        closeTime: new Date('2025-12-31T23:59:59Z'),
-        yesPrice: 0.65,
-        noPrice: 0.35,
-        volume: 12500,
-        liquidity: 5000,
-        yesShares: 3250,
-        noShares: 1750,
-        resolved: false,
-    };
-
-    // Countdown timer state
-    const [timeLeft, setTimeLeft] = useState('');
+export default function MarketDetailPage() {
+    const params = useParams();
+    const marketId = params ? parseInt(params.id as string) : 0;
+    const [market, setMarket] = useState<Market | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            const diff = market.closeTime.getTime() - Date.now();
-            if (diff <= 0) {
-                setTimeLeft('Closed');
-                clearInterval(interval);
-                return;
+        async function fetchMarket() {
+            try {
+                const response = await fetch(`/api/markets`);
+                const data = await response.json();
+                const found = data.markets.find((m: Market) => m.marketId === marketId);
+                setMarket(found || null);
+            } catch (error) {
+                console.error('Error fetching market:', error);
+            } finally {
+                setLoading(false);
             }
-            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const m = Math.floor((diff / (1000 * 60)) % 60);
-            const s = Math.floor((diff / 1000) % 60);
-            setTimeLeft(`${d}d ${h}h ${m}m ${s}s`);
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
+        }
+
+        fetchMarket();
+    }, [marketId]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-purple-900/20 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
+    if (!market) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-purple-900/20 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-6xl mb-4">❓</div>
+                    <h1 className="text-2xl font-bold text-white mb-2">Market Not Found</h1>
+                    <Link href="/markets" className="text-blue-400 hover:text-blue-300">
+                        ← Back to Markets
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    const yesPrice = market.yesPrice || 0.5;
+    const noPrice = market.noPrice || 0.5;
+    const timeRemaining = formatTimeRemaining(market.closeTime);
+    const marketStatus = getMarketStatus(market.closeTime, market.status === 'resolved');
+
+    const getCategoryColor = (cat: string) => {
+        const colors: Record<string, string> = {
+            Crypto: 'from-orange-500 to-yellow-500',
+            Sports: 'from-blue-500 to-cyan-500',
+            Politics: 'from-purple-500 to-pink-500',
+            Economics: 'from-green-500 to-emerald-500',
+            Technology: 'from-indigo-500 to-blue-500',
+        };
+        return colors[cat] || 'from-gray-500 to-slate-500';
+    };
 
     return (
-        <div className="min-h-screen py-6 sm:py-12">
-            <div className="container-mobile">
-                {/* Breadcrumb */}
-                <div className="mb-6 flex items-center gap-2 text-sm text-dark-muted">
-                    <Link href="/markets" className="hover:text-primary-400 transition-colors">
-                        Markets
-                    </Link>
-                    <span>/</span>
-                    <span className="text-dark-text">{market.category}</span>
-                </div>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-purple-900/20">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                {/* Back Button */}
+                <Link
+                    href="/markets"
+                    className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to Markets
+                </Link>
 
-                {/* Layout */}
-                <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Header Card */}
-                        <div className="card">
-                            <div className="flex flex-wrap items-center gap-3 mb-4">
-                                <span className="px-3 py-1 rounded-lg bg-gradient-to-r from-orange-500 to-yellow-500 text-white text-sm font-semibold">
+                        {/* Market Header */}
+                        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl p-8">
+                            <div className="flex items-start justify-between gap-4 mb-6">
+                                <div className={`px-4 py-2 rounded-full bg-gradient-to-r ${getCategoryColor(market.category)} text-white font-medium text-sm`}>
                                     {market.category}
-                                </span>
-                                <span className="px-3 py-1 rounded-lg bg-dark-bg text-dark-muted text-sm">
-                                    {timeLeft}
-                                </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-gray-400">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>{timeRemaining}</span>
+                                </div>
                             </div>
 
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold mb-4">
-                                {market.question}
-                            </h1>
+                            <h1 className="text-3xl font-bold text-white mb-4">{market.question}</h1>
 
-                            <p className="text-dark-muted mb-6 leading-relaxed">{market.description}</p>
-
-                            {/* Source Link */}
-                            <a
-                                href={market.sourceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                    />
-                                </svg>
-                                View Source
-                            </a>
+                            {market.sourceUrl && (
+                                <a
+                                    href={market.sourceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                    View Source
+                                </a>
+                            )}
                         </div>
 
-                        {/* Price Chart */}
-                        <div className="card h-[400px]">
-                            <PriceChart currentYesPrice={market.yesPrice} currentNoPrice={market.noPrice} />
+                        {/* Current Prices */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="rounded-2xl border border-green-500/20 bg-gradient-to-br from-green-500/10 to-green-500/5 backdrop-blur-xl p-6">
+                                <div className="text-sm text-gray-400 mb-2">YES</div>
+                                <div className="text-4xl font-bold text-green-400 mb-2">{formatPrice(yesPrice)}</div>
+                                <div className="text-sm text-gray-400">{(yesPrice * 100).toFixed(1)}% chance</div>
+                            </div>
+                            <div className="rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/10 to-red-500/5 backdrop-blur-xl p-6">
+                                <div className="text-sm text-gray-400 mb-2">NO</div>
+                                <div className="text-4xl font-bold text-red-400 mb-2">{formatPrice(noPrice)}</div>
+                                <div className="text-sm text-gray-400">{(noPrice * 100).toFixed(1)}% chance</div>
+                            </div>
                         </div>
 
                         {/* Market Stats */}
-                        <div className="card">
-                            <h3 className="text-xl font-bold mb-4">Market Statistics</h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl p-6">
+                            <h3 className="text-lg font-semibold text-white mb-4">Market Statistics</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
-                                    <p className="text-sm text-dark-muted mb-1">Total Volume</p>
-                                    <p className="text-xl font-bold">{market.volume.toLocaleString()}</p>
+                                    <div className="text-sm text-gray-400 mb-1">Volume</div>
+                                    <div className="text-xl font-bold text-white">${(Number(market.volume || 0) / 1e6).toFixed(0)}</div>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-dark-muted mb-1">Liquidity</p>
-                                    <p className="text-xl font-bold">{market.liquidity.toLocaleString()}</p>
+                                    <div className="text-sm text-gray-400 mb-1">Liquidity</div>
+                                    <div className="text-xl font-bold text-white">${(Number(market.liquidityParameter || 0) / 1e18).toFixed(0)}</div>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-dark-muted mb-1">YES Shares</p>
-                                    <p className="text-xl font-bold text-yes">{market.yesShares.toLocaleString()}</p>
+                                    <div className="text-sm text-gray-400 mb-1">Status</div>
+                                    <div className={`text-xl font-bold ${marketStatus === 'active' ? 'text-blue-400' : marketStatus === 'closed' ? 'text-yellow-400' : 'text-green-400'}`}>
+                                        {marketStatus.charAt(0).toUpperCase() + marketStatus.slice(1)}
+                                    </div>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-dark-muted mb-1">NO Shares</p>
-                                    <p className="text-xl font-bold text-no">{market.noShares.toLocaleString()}</p>
+                                    <div className="text-sm text-gray-400 mb-1">Created</div>
+                                    <div className="text-xl font-bold text-white">
+                                        {new Date(market.createdAt * 1000).toLocaleDateString()}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Market Info */}
-                        <div className="card">
-                            <h3 className="text-xl font-bold mb-4">Market Information</h3>
-                            <div className="space-y-3 text-sm">
-                                <div className="flex justify-between py-2 border-b border-dark-border">
-                                    <span className="text-dark-muted">Creator</span>
-                                    <a
-                                        href={`https://testnet.arcscan.app/address/${market.creator}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="font-mono text-primary-400 hover:text-primary-300"
-                                    >
-                                        {market.creator}
-                                    </a>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-dark-border">
-                                    <span className="text-dark-muted">Created</span>
-                                    <span className="font-semibold">{market.createdAt.toLocaleDateString()}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-dark-border">
-                                    <span className="text-dark-muted">Closes</span>
-                                    <span className="font-semibold">{market.closeTime.toLocaleDateString()}</span>
-                                </div>
-                                <div className="flex justify-between py-2">
-                                    <span className="text-dark-muted">Status</span>
-                                    <span className="font-semibold text-yes">Active</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Recent Trades – placeholder */}
-                        <div className="card">
-                            <h3 className="text-xl font-bold mb-4">Recent Trades</h3>
-                            <p className="text-dark-muted">(Trade data will appear here)</p>
                         </div>
                     </div>
 
-                    {/* Trading Panel */}
-                    <div className="lg:col-span-1">
-                        <TradingPanel marketId={market.id} yesPrice={market.yesPrice} noPrice={market.noPrice} />
+                    {/* Sidebar */}
+                    <div className="space-y-6">
+                        {marketStatus === 'resolved' && market.winningOutcome !== null ? (
+                            <ClaimPanel
+                                marketAddress={market.marketAddress as `0x${string}`}
+                                winningOutcome={market.winningOutcome}
+                                userYesShares={BigInt(0)}
+                                userNoShares={BigInt(0)}
+                                onClaim={async () => { }}
+                                isPending={false}
+                            />
+                        ) : (
+                            <TradingPanel
+                                marketId={market.marketId}
+                                yesPrice={yesPrice}
+                                noPrice={noPrice}
+                            />
+                        )}
                     </div>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useAccount, useConnect, useDisconnect, useBalance, useSwitchChain } from 'wagmi';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CONTRACT_ADDRESSES, arcTestnetChain } from '@/config/wagmi';
 
 export default function WalletButton() {
@@ -11,6 +11,7 @@ export default function WalletButton() {
     const { switchChain } = useSwitchChain();
     const [showDropdown, setShowDropdown] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Get USDC balance (native currency on Arc Testnet)
     const { data: usdcBalance } = useBalance({
@@ -22,9 +23,23 @@ export default function WalletButton() {
         setMounted(true);
     }, []);
 
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        }
+
+        if (showDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [showDropdown]);
+
     if (!mounted) {
         return (
-            <div className="btn btn-secondary animate-pulse">
+            <div className="px-4 py-2 rounded-lg bg-[#141b2e] border border-[#1e293b] text-gray-400 animate-pulse">
                 Loading...
             </div>
         );
@@ -32,18 +47,19 @@ export default function WalletButton() {
 
     if (!isConnected) {
         return (
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
                 <button
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className="btn btn-primary tap-target"
+                    className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium transition-all"
                 >
                     <span className="hidden sm:inline">Connect Wallet</span>
                     <span className="sm:hidden">Connect</span>
                 </button>
 
                 {showDropdown && (
-                    <div className="absolute right-0 mt-2 w-64 card animate-slide-down">
-                        <div className="flex flex-col gap-2">
+                    <div className="absolute right-0 mt-2 w-64 rounded-xl border border-[#1e293b] bg-[#141b2e] shadow-xl z-50 overflow-hidden">
+                        <div className="p-2">
+                            <div className="text-xs text-gray-400 px-3 py-2 mb-1">Select Wallet</div>
                             {connectors.map((connector) => (
                                 <button
                                     key={connector.id}
@@ -51,9 +67,11 @@ export default function WalletButton() {
                                         connect({ connector });
                                         setShowDropdown(false);
                                     }}
-                                    className="tap-target px-4 py-3 rounded-lg hover:bg-dark-bg transition-all text-left font-medium"
+                                    className="w-full px-4 py-3 rounded-lg hover:bg-[#1e293b] transition-all text-left font-medium text-white flex items-center justify-between"
                                 >
-                                    {connector.name}
+                                    <span>{connector.name}</span>
+                                    {connector.name === 'MetaMask' && <span className="text-orange-400">🦊</span>}
+                                    {connector.name === 'WalletConnect' && <span className="text-blue-400">🔗</span>}
                                 </button>
                             ))}
                         </div>
@@ -67,22 +85,25 @@ export default function WalletButton() {
     const isWrongNetwork = chain?.id !== arcTestnetChain.id;
 
     return (
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className={`btn tap-target ${isWrongNetwork ? 'btn-no' : 'btn-secondary'} flex items-center gap-2`}
+                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${isWrongNetwork
+                        ? 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20'
+                        : 'bg-[#141b2e] border border-[#1e293b] text-white hover:bg-[#1e293b]'
+                    }`}
             >
                 {isWrongNetwork ? (
                     <>
-                        <span className="w-2 h-2 rounded-full bg-no animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
                         <span className="hidden sm:inline">Wrong Network</span>
                         <span className="sm:hidden">Wrong Net</span>
                     </>
                 ) : (
                     <>
-                        <span className="w-2 h-2 rounded-full bg-yes" />
+                        <span className="w-2 h-2 rounded-full bg-green-400" />
                         <div className="flex flex-col items-start">
-                            <span className="text-xs text-dark-muted hidden sm:block">
+                            <span className="text-xs text-gray-400 hidden sm:block">
                                 {usdcBalance ? `${parseFloat(usdcBalance.formatted).toFixed(2)} USDC` : '0.00 USDC'}
                             </span>
                             <span className="font-mono text-sm">
@@ -94,24 +115,27 @@ export default function WalletButton() {
             </button>
 
             {showDropdown && (
-                <div className="absolute right-0 mt-2 w-64 card animate-slide-down">
-                    <div className="flex flex-col gap-3">
+                <div className="absolute right-0 mt-2 w-72 rounded-xl border border-[#1e293b] bg-[#141b2e] shadow-xl z-50 overflow-hidden">
+                    <div className="p-4">
                         {/* Account Info */}
-                        <div className="pb-3 border-b border-dark-border">
-                            <p className="text-xs text-dark-muted mb-1">Connected Account</p>
-                            <p className="font-mono text-sm break-all">{address}</p>
+                        <div className="pb-4 border-b border-[#1e293b]">
+                            <p className="text-xs text-gray-400 mb-2">Connected Account</p>
+                            <p className="font-mono text-sm break-all text-white mb-3">{address}</p>
                             {usdcBalance && (
-                                <p className="text-lg font-bold mt-2 text-primary-400">
-                                    {parseFloat(usdcBalance.formatted).toFixed(2)} USDC
-                                </p>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-400 text-sm">Balance</span>
+                                    <span className="text-lg font-bold text-blue-400">
+                                        {parseFloat(usdcBalance.formatted).toFixed(2)} USDC
+                                    </span>
+                                </div>
                             )}
                         </div>
 
-                        {/* Network Info */}
+                        {/* Network Warning */}
                         {isWrongNetwork && (
-                            <div className="p-3 rounded-lg bg-no/10 border border-no/20">
-                                <p className="text-sm text-no font-medium mb-2">Wrong Network</p>
-                                <p className="text-xs text-dark-muted mb-3">
+                            <div className="my-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                                <p className="text-sm text-red-400 font-medium mb-2">Wrong Network</p>
+                                <p className="text-xs text-gray-400 mb-3">
                                     Please switch to Arc Testnet
                                 </p>
                                 <button
@@ -119,7 +143,7 @@ export default function WalletButton() {
                                         switchChain({ chainId: arcTestnetChain.id });
                                         setShowDropdown(false);
                                     }}
-                                    className="w-full btn btn-primary text-sm py-2"
+                                    className="w-full px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium transition-all"
                                 >
                                     Switch to Arc Testnet
                                 </button>
@@ -127,54 +151,48 @@ export default function WalletButton() {
                         )}
 
                         {/* Actions */}
-                        <button
-                            onClick={() => {
-                                navigator.clipboard.writeText(address || '');
-                                setShowDropdown(false);
-                            }}
-                            className="tap-target px-4 py-2 rounded-lg hover:bg-dark-bg transition-all text-left text-sm flex items-center gap-2"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            Copy Address
-                        </button>
+                        <div className="mt-4 space-y-1">
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(address || '');
+                                    setShowDropdown(false);
+                                }}
+                                className="w-full px-4 py-2.5 rounded-lg hover:bg-[#1e293b] transition-all text-left text-sm text-white flex items-center gap-2"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                Copy Address
+                            </button>
 
-                        <a
-                            href={`https://testnet.arcscan.app/address/${address}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => setShowDropdown(false)}
-                            className="tap-target px-4 py-2 rounded-lg hover:bg-dark-bg transition-all text-left text-sm flex items-center gap-2"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            View on Explorer
-                        </a>
+                            <a
+                                href={`https://testnet.arcscan.app/address/${address}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => setShowDropdown(false)}
+                                className="w-full px-4 py-2.5 rounded-lg hover:bg-[#1e293b] transition-all text-left text-sm text-white flex items-center gap-2"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                View on Explorer
+                            </a>
 
-                        <button
-                            onClick={() => {
-                                disconnect();
-                                setShowDropdown(false);
-                            }}
-                            className="tap-target px-4 py-2 rounded-lg hover:bg-dark-bg transition-all text-left text-sm text-no flex items-center gap-2"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            Disconnect
-                        </button>
+                            <button
+                                onClick={() => {
+                                    disconnect();
+                                    setShowDropdown(false);
+                                }}
+                                className="w-full px-4 py-2.5 rounded-lg hover:bg-red-500/10 transition-all text-left text-sm text-red-400 flex items-center gap-2"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                                Disconnect
+                            </button>
+                        </div>
                     </div>
                 </div>
-            )}
-
-            {/* Click outside to close */}
-            {showDropdown && (
-                <div
-                    className="fixed inset-0 z-[-1]"
-                    onClick={() => setShowDropdown(false)}
-                />
             )}
         </div>
     );

@@ -2,11 +2,8 @@
 
 import Link from 'next/link';
 import { FAUCET_URLS } from '@/config/wagmi';
-import { useMarketStats } from '@/hooks/useMarketStats';
 
 export default function HomePage() {
-    const stats = useMarketStats();
-
     return (
         <div className="min-h-screen">
             {/* Hero Section - Mobile Optimized */}
@@ -36,8 +33,8 @@ export default function HomePage() {
 
                         {/* CTA Buttons - Mobile Stacked */}
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                            <Link href="/markets" className="btn btn-primary text-lg px-8 py-4 text-center">
-                                Explore Markets
+                            <Link href="/create" className="btn btn-primary text-lg px-8 py-4 text-center">
+                                Create Market
                             </Link>
                             <a
                                 href={FAUCET_URLS.circle}
@@ -47,24 +44,6 @@ export default function HomePage() {
                             >
                                 Get Free USDC
                             </a>
-                        </div>
-
-                        {/* Stats - Mobile Grid */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mt-12 sm:mt-20">
-                            {[
-                                { label: 'Total Volume', value: stats.totalVolume, subtext: 'Testnet USDC' },
-                                { label: 'Active Markets', value: stats.activeMarkets, subtext: 'Live now' },
-                                { label: 'Total Traders', value: stats.totalTraders, subtext: 'Participants' },
-                                { label: 'Avg. Accuracy', value: stats.avgAccuracy, subtext: 'Predictions' },
-                            ].map((stat, i) => (
-                                <div key={i} className="card text-center animate-fade-in" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
-                                    <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-1">
-                                        {stat.value}
-                                    </p>
-                                    <p className="text-sm font-medium text-dark-text mb-1">{stat.label}</p>
-                                    <p className="text-xs text-dark-muted">{stat.subtext}</p>
-                                </div>
-                            ))}
                         </div>
                     </div>
                 </div>
@@ -166,7 +145,7 @@ export default function HomePage() {
                         ].map((category, i) => (
                             <Link
                                 key={i}
-                                href={`/markets?category=${category.name.toLowerCase()}`}
+                                href="/create"
                                 className="card-hover group text-center"
                             >
                                 <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${category.color} flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-lg`}>
@@ -191,11 +170,11 @@ export default function HomePage() {
                             No risk, no real money required.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link href="/markets" className="btn btn-primary text-lg px-8 py-4 text-center">
-                                Browse Markets
-                            </Link>
-                            <Link href="/create" className="btn btn-secondary text-lg px-8 py-4 text-center">
+                            <Link href="/create" className="btn btn-primary text-lg px-8 py-4 text-center">
                                 Create Market
+                            </Link>
+                            <Link href="/portfolio" className="btn btn-secondary text-lg px-8 py-4 text-center">
+                                View Portfolio
                             </Link>
                         </div>
                     </div>

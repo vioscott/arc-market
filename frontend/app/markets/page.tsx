@@ -1,254 +1,148 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import MarketCard from '@/components/MarketCard';
+import { useMarkets } from '@/hooks/useMarkets';
 
-function MarketsContent() {
-    const searchParams = useSearchParams();
-    const initialCategory = searchParams?.get('category') || 'all';
+const CATEGORIES = [
+    { id: 'All', label: 'All Markets', icon: '📊' },
+    { id: 'Crypto', label: 'Crypto', icon: '₿' },
+    { id: 'Sports', label: 'Sports', icon: '⚽' },
+    { id: 'Politics', label: 'Politics', icon: '🏛️' },
+    { id: 'Economics', label: 'Economics', icon: '📈' },
+    { id: 'Technology', label: 'Technology', icon: '💻' },
+];
 
-    const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+const SORT_OPTIONS = [
+    { value: 'volume', label: 'Highest Volume' },
+    { value: 'newest', label: 'Newest' },
+    { value: 'closing', label: 'Closing Soon' },
+];
+
+export default function MarketsPage() {
+    const [selectedCategory, setSelectedCategory] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('volume');
-    const [displayCount, setDisplayCount] = useState(6); // Show 6 markets initially
 
-    // Update category if URL changes
-    useEffect(() => {
-        const category = searchParams?.get('category');
-        if (category) {
-            setSelectedCategory(category);
-        }
-    }, [searchParams]);
-
-    const categories = [
-        {
-            id: 'all',
-            name: 'All Markets',
-            icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-            )
-        },
-        {
-            id: 'crypto',
-            name: 'Crypto',
-            icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            )
-        },
-        {
-            id: 'sports',
-            name: 'Sports',
-            icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            )
-        },
-        {
-            id: 'politics',
-            name: 'Politics',
-            icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-            )
-        },
-        {
-            id: 'economics',
-            name: 'Economics',
-            icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                </svg>
-            )
-        },
-        {
-            id: 'technology',
-            name: 'Technology',
-            icon: (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-            )
-        },
-    ];
-
-    // Mock data - will be replaced with real data from contracts
-    const mockMarkets = [
-        {
-            id: 1,
-            question: 'Will Bitcoin reach $100,000 by end of 2025?',
-            category: 'Crypto',
-            yesPrice: 0.65,
-            noPrice: 0.35,
-            volume: 12500,
-            liquidity: 5000,
-            closeTime: new Date('2025-12-31'),
-            resolved: false,
-        },
-        {
-            id: 2,
-            question: 'Will Ethereum merge to Proof of Stake succeed?',
-            category: 'Crypto',
-            yesPrice: 0.82,
-            noPrice: 0.18,
-            volume: 8900,
-            liquidity: 3500,
-            closeTime: new Date('2025-06-30'),
-            resolved: false,
-        },
-        {
-            id: 3,
-            question: 'Will the Lakers win the NBA Championship?',
-            category: 'Sports',
-            yesPrice: 0.42,
-            noPrice: 0.58,
-            volume: 15200,
-            liquidity: 6000,
-            closeTime: new Date('2025-07-15'),
-            resolved: false,
-        },
-    ];
-
-    const filteredMarkets = mockMarkets.filter((market) => {
-        const matchesCategory = selectedCategory === 'all' || market.category.toLowerCase() === selectedCategory.toLowerCase();
-        const matchesSearch = market.question.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
+    const { markets, loading, error } = useMarkets({
+        category: selectedCategory !== 'All' ? selectedCategory : undefined,
+        search: searchQuery || undefined,
     });
 
-    // Slice markets based on displayCount
-    const displayedMarkets = filteredMarkets.slice(0, displayCount);
-    const hasMore = displayCount < filteredMarkets.length;
-
-    const handleLoadMore = () => {
-        setDisplayCount(prev => prev + 6); // Load 6 more markets
-    };
-
-    // Reset displayCount when filters change
-    useEffect(() => {
-        setDisplayCount(6);
-    }, [selectedCategory, searchQuery]);
+    // Sort markets
+    const sortedMarkets = [...markets].sort((a, b) => {
+        if (sortBy === 'volume') {
+            return Number(b.volume || 0) - Number(a.volume || 0);
+        } else if (sortBy === 'newest') {
+            return b.createdAt - a.createdAt;
+        } else if (sortBy === 'closing') {
+            return a.closeTime - b.closeTime;
+        }
+        return 0;
+    });
 
     return (
-        <div className="min-h-screen py-8 sm:py-12">
-            <div className="container-mobile">
+        <div className="min-h-screen bg-[#0a0e1a]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
-                <div className="mb-8 sm:mb-12">
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold mb-4">
+                <div className="mb-8">
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
                         Prediction Markets
                     </h1>
-                    <p className="text-lg text-dark-muted">
+                    <p className="text-lg text-gray-400">
                         Trade on real-world events with testnet USDC
                     </p>
                 </div>
 
-                {/* Search Bar - Mobile Optimized */}
-                <div className="mb-6 sm:mb-8">
+                {/* Search Bar */}
+                <div className="mb-6">
                     <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
                         <input
                             type="text"
                             placeholder="Search markets..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="input pl-12"
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-[#141b2e] border border-[#1e293b] text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                         />
-                        <svg
-                            className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-muted"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                    </div>
+                </div>
+
+                {/* Category Filters */}
+                <div className="mb-6 flex flex-wrap gap-3">
+                    {CATEGORIES.map((category) => (
+                        <button
+                            key={category.id}
+                            onClick={() => setSelectedCategory(category.id)}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${selectedCategory === category.id
+                                    ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
+                                    : 'bg-[#141b2e] text-gray-400 hover:bg-[#1e293b] hover:text-white border border-[#1e293b]'
+                                }`}
                         >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
+                            <span className="text-lg">{category.icon}</span>
+                            <span>{category.label}</span>
+                        </button>
+                    ))}
                 </div>
 
-                {/* Category Filter - Horizontal Scroll on Mobile */}
-                <div className="mb-6 sm:mb-8 -mx-4 px-4 sm:mx-0 sm:px-0">
-                    <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
-                        {categories.map((category) => (
-                            <button
-                                key={category.id}
-                                onClick={() => setSelectedCategory(category.id)}
-                                className={`tap-target flex-shrink-0 px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${selectedCategory === category.id
-                                    ? 'bg-primary-500 text-white shadow-glow'
-                                    : 'bg-dark-card text-dark-muted hover:bg-dark-border'
-                                    }`}
-                            >
-                                <span>{category.icon}</span>
-                                {category.name}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Sort Options - Mobile Dropdown */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
-                    <p className="text-dark-muted">
-                        Showing <span className="font-semibold text-dark-text">{filteredMarkets.length}</span> markets
+                {/* Results Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <p className="text-gray-400">
+                        Showing <span className="text-white font-semibold">{sortedMarkets.length}</span> markets
                     </p>
-
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
-                        className="input w-full sm:w-auto"
+                        className="px-4 py-2 rounded-lg bg-[#141b2e] border border-[#1e293b] text-white focus:outline-none focus:border-blue-500 cursor-pointer"
                     >
-                        <option value="volume">Highest Volume</option>
-                        <option value="liquidity">Highest Liquidity</option>
-                        <option value="closing">Closing Soon</option>
-                        <option value="newest">Newest</option>
+                        {SORT_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
-                {/* Markets Grid - Responsive */}
-                {displayedMarkets.length > 0 ? (
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                        {displayedMarkets.map((market) => (
-                            <MarketCard key={market.id} {...market} />
-                        ))}
+                {/* Markets Grid */}
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                    </div>
+                ) : error ? (
+                    <div className="text-center py-20">
+                        <div className="text-red-400 mb-2">Error loading markets</div>
+                        <div className="text-gray-500 text-sm">{error}</div>
+                    </div>
+                ) : sortedMarkets.length === 0 ? (
+                    <div className="text-center py-20">
+                        <div className="text-6xl mb-4">📊</div>
+                        <div className="text-xl text-gray-400 mb-2">No markets found</div>
+                        <div className="text-gray-500">Try adjusting your filters or search</div>
                     </div>
                 ) : (
-                    <div className="card text-center py-12 sm:py-20">
-                        <div className="text-6xl mb-4 flex justify-center text-dark-muted">
-                            <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
-                            </svg>
-                        </div>
-                        <h3 className="text-xl font-bold mb-2">No markets found</h3>
-                        <p className="text-dark-muted mb-6">
-                            Try adjusting your filters or create a new market
-                        </p>
-                        <a href="/create" className="btn btn-primary inline-block">
-                            Create Market
-                        </a>
-                    </div>
-                )}
-
-                {/* Load More - Mobile Friendly */}
-                {hasMore && (
-                    <div className="mt-8 sm:mt-12 text-center">
-                        <button
-                            onClick={handleLoadMore}
-                            className="btn btn-secondary px-8 py-3"
-                        >
-                            Load More Markets ({filteredMarkets.length - displayCount} remaining)
-                        </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {sortedMarkets.map((market) => (
+                            <MarketCard
+                                key={market.marketId}
+                                marketId={market.marketId}
+                                marketAddress={market.marketAddress}
+                                question={market.question}
+                                category={market.category}
+                                closeTime={market.closeTime}
+                                yesShares={market.yesShares || '0'}
+                                noShares={market.noShares || '0'}
+                                volume={market.volume || '0'}
+                                status={market.status}
+                                winningOutcome={market.winningOutcome}
+                            />
+                        ))}
                     </div>
                 )}
             </div>
         </div>
-    );
-}
-
-export default function MarketsPage() {
-    return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-            <MarketsContent />
-        </Suspense>
     );
 }

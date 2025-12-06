@@ -1,5 +1,5 @@
 import { http, createConfig } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { injected, walletConnect, coinbaseWallet } from 'wagmi/connectors';
 
 // Arc Testnet chain configuration
 export const arcTestnetChain = {
@@ -38,7 +38,15 @@ export const CONTRACT_ADDRESSES = {
 // Wagmi configuration
 export const config = createConfig({
     chains: [arcTestnetChain],
-    connectors: [injected()],
+    connectors: [
+        injected(),
+        walletConnect({
+            projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo',
+        }),
+        coinbaseWallet({
+            appName: 'Arc Markets',
+        }),
+    ],
     transports: {
         [arcTestnetChain.id]: http(),
     },
