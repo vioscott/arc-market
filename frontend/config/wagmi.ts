@@ -1,5 +1,5 @@
 import { http, createConfig } from 'wagmi';
-import { injected, walletConnect, coinbaseWallet } from 'wagmi/connectors';
+import { injected } from 'wagmi/connectors';
 
 // Arc Testnet chain configuration
 export const arcTestnetChain = {
@@ -29,10 +29,10 @@ export const arcTestnetChain = {
 
 // Contract addresses (will be populated after deployment)
 export const CONTRACT_ADDRESSES = {
-    USDC: '0x3600000000000000000000000000000000000000',
-    MarketFactory: process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS || '0xe1737Ad3fac808BdC874BaBE05bAD9586D9D23D9',
-    Oracle: process.env.NEXT_PUBLIC_ORACLE_ADDRESS || '0x45c23e335580b8A43478Fa89Daa31B5a133B5B84',
-    OutcomeToken: process.env.NEXT_PUBLIC_OUTCOME_TOKEN_ADDRESS || '0x69741e2dB9472A5FcD2B4Ec3Ac48003b8e6CcAD6',
+    USDC: process.env.NEXT_PUBLIC_USDC_ADDRESS || '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',
+    MarketFactory: process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS || '0xa52e6618a12E5932256cC0C9EAc5Efd2C34C70Af',
+    Oracle: process.env.NEXT_PUBLIC_ORACLE_ADDRESS || '0xf9f08F485363B603Ce021CEEF7B4C2f0bc180ac9',
+    OutcomeToken: process.env.NEXT_PUBLIC_OUTCOME_TOKEN_ADDRESS || '0x83C754b59cEa49F441602DfF046806f273675b20',
 };
 
 // Wagmi configuration
@@ -40,12 +40,6 @@ export const config = createConfig({
     chains: [arcTestnetChain],
     connectors: [
         injected(),
-        walletConnect({
-            projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo',
-        }),
-        coinbaseWallet({
-            appName: 'Arc Markets',
-        }),
     ],
     transports: {
         [arcTestnetChain.id]: http(),

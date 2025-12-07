@@ -1,14 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useConnect } from 'wagmi';
 import { useRouter } from 'next/navigation';
+import WalletOptionsModal from '@/components/WalletOptionsModal';
 
 export default function CreateMarketPage() {
     const { isConnected } = useAccount();
+    const { connect, connectors } = useConnect();
     const router = useRouter();
     const [isCreating, setIsCreating] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [showWalletOptions, setShowWalletOptions] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -329,8 +332,9 @@ export default function CreateMarketPage() {
                     {/* Submit Button */}
                     <div className="flex flex-col sm:flex-row gap-4">
                         <button
-                            type="submit"
-                            disabled={!mounted || !isConnected || isCreating}
+                            type={isConnected ? "submit" : "button"}
+                            onClick={!isConnected ? () => setShowWalletOptions(true) : undefined}
+                            disabled={!mounted || isCreating}
                             className="btn btn-primary text-lg py-4 flex-1"
                         >
                             {isCreating ? (
@@ -376,6 +380,13 @@ export default function CreateMarketPage() {
                         </div>
                     </div>
                 </form>
+
+                <WalletOptionsModal
+                    isOpen={showWalletOptions}
+                    onClose={() => setShowWalletOptions(false)}
+                    connectors={connectors}
+                    connect={connect}
+                />
             </div>
         </div>
     );

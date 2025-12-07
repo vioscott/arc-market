@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useConnect } from 'wagmi';
 import Link from 'next/link';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { parseUnits } from 'viem';
+import WalletOptionsModal from '@/components/WalletOptionsModal';
 
 const MARKET_ABI = [
     {
@@ -18,8 +19,10 @@ const MARKET_ABI = [
 
 export default function PortfolioPage() {
     const { address, isConnected } = useAccount();
+    const { connect, connectors } = useConnect();
     const [activeTab, setActiveTab] = useState<'active' | 'redeemable' | 'history'>('active');
     const [mounted, setMounted] = useState(false);
+    const [showWalletOptions, setShowWalletOptions] = useState(false);
 
     const { positions, redeemable, isLoading } = usePortfolio();
 
@@ -78,7 +81,10 @@ export default function PortfolioPage() {
                         <p className="text-dark-muted mb-8">
                             Connect your wallet to view your portfolio and trading history
                         </p>
-                        <button className="btn btn-primary text-lg px-8 py-4">
+                        <button
+                            className="btn btn-primary text-lg px-8 py-4"
+                            onClick={() => connect({ connector: connectors[0] })}
+                        >
                             Connect Wallet
                         </button>
                     </div>
@@ -292,7 +298,15 @@ export default function PortfolioPage() {
                         </p>
                     </div>
                 )}
+
             </div>
+
+            <WalletOptionsModal
+                isOpen={showWalletOptions}
+                onClose={() => setShowWalletOptions(false)}
+                connectors={connectors}
+                connect={connect}
+            />
         </div>
     );
 }

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAccount, useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt, useConnect } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES, arcTestnetChain } from '@/config/wagmi';
+import WalletOptionsModal from './WalletOptionsModal';
 
 // Minimal ABIs
 const MARKET_FACTORY_ABI = [
@@ -71,10 +72,12 @@ interface TradingPanelProps {
 
 export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPanelProps) {
     const { address, isConnected } = useAccount();
+    const { connect, connectors } = useConnect();
     const [selectedOutcome, setSelectedOutcome] = useState<'yes' | 'no'>('yes');
     const [amount, setAmount] = useState('');
     const [error, setError] = useState('');
     const [mounted, setMounted] = useState(false);
+    const [showWalletOptions, setShowWalletOptions] = useState(false);
 
     // 1. Get Market Address (or use mock for testing)
     // Note: In production, this should fetch from MarketFactory
@@ -92,7 +95,9 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
 
     // Use contract address if available, otherwise use a mock for UI testing
     // TODO: Remove this mock once real markets are created
-    const marketAddress = marketAddressFromContract || '0x0000000000000000000000000000000000000000' as `0x${string}`;
+    const marketAddress = marketAddressFromContract && marketAddressFromContract !== '0x0000000000000000000000000000000000000000'
+        ? marketAddressFromContract
+        : null;
     const isRealMarket = !!marketAddressFromContract;
 
     // 2. Get USDC Balance (native currency on Arc Testnet)
@@ -170,7 +175,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
         if (isApproveSuccess) {
             // Force immediate refetch after approval
             refetchAllowance().then(() => {
-                if (shouldAutoBuy) {
+                if (shouldAutoBuy && marketAddress) {
                     // Trigger buy automatically
                     const maxCost = cost * BigInt(101) / BigInt(100);
                     writeBuy({
@@ -288,19 +293,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
         <div className="card sticky top-24">
             <h3 className="text-xl font-bold mb-6">Trade</h3>
 
-            {/* Mock Market Warning */}
-            {!isRealMarket && (
-                <div className="mb-4 p-3 rounded-lg bg-primary-500/10 border border-primary-500/20">
-                    <p className="text-xs text-primary-400 flex items-start gap-2">
-                        <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>
-                            This market doesn't exist on-chain yet. Run <code className="px-1 py-0.5 bg-dark-bg rounded text-xs">node contracts/scripts/autoCreateMarkets.js</code> to create real markets.
-                        </span>
-                    </p>
-                </div>
-            )}
+
 
             {/* Outcome Selector */}
             <div className="grid grid-cols-2 gap-3 mb-6">
@@ -399,6 +392,14 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
                 </div>
             )}
 
+            {!marketAddress && isConnected && (
+                <div className="mb-4 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                    <p className="text-sm text-orange-400">
+                        Market contract not found. This market might not be deployed yet.
+                    </p>
+                </div>
+            )}
+
             {/* Success Messages */}
             {approvalSuccess && (
                 <div className="mb-4 p-3 rounded-lg bg-yes/10 border border-yes/20">
@@ -424,7 +425,10 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
 
             {/* Action Button */}
             {!isConnected ? (
-                <button className="btn btn-primary w-full text-lg py-4">
+                <button
+                    className="btn btn-primary w-full text-lg py-4"
+                    onClick={() => setShowWalletOptions(true)}
+                >
                     Connect Wallet to Trade
                 </button>
             ) : (
@@ -464,6 +468,14 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
                     </span>
                 </p>
             </div>
+
+
+            <WalletOptionsModal
+                isOpen={showWalletOptions}
+                onClose={() => setShowWalletOptions(false)}
+                connectors={connectors}
+                connect={connect}
+            />
         </div>
     );
 }

@@ -73,20 +73,23 @@ export default function MarketsPage() {
                 </div>
 
                 {/* Category Filters */}
-                <div className="mb-6 flex flex-wrap gap-3">
-                    {CATEGORIES.map((category) => (
-                        <button
-                            key={category.id}
-                            onClick={() => setSelectedCategory(category.id)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${selectedCategory === category.id
+                {/* Category Filters - Horizontal Scroll on Mobile */}
+                <div className="mb-6 -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto scrollbar-hide">
+                    <div className="flex sm:flex-wrap gap-3 min-w-max sm:min-w-0 pr-4 sm:pr-0">
+                        {CATEGORIES.map((category) => (
+                            <button
+                                key={category.id}
+                                onClick={() => setSelectedCategory(category.id)}
+                                className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium transition-all whitespace-nowrap ${selectedCategory === category.id
                                     ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
                                     : 'bg-[#141b2e] text-gray-400 hover:bg-[#1e293b] hover:text-white border border-[#1e293b]'
-                                }`}
-                        >
-                            <span className="text-lg">{category.icon}</span>
-                            <span>{category.label}</span>
-                        </button>
-                    ))}
+                                    }`}
+                            >
+                                <span className="text-lg">{category.icon}</span>
+                                <span>{category.label}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Results Header */}
