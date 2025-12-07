@@ -27,7 +27,7 @@ export async function deployMarket(event, signer) {
         // Prepare market parameters
         const question = event.question;
         const sourceUrl = event.sourceUrl;
-        const closeTime = event.deadline;
+        const closeTime = event.closeTime; // Use closeTime instead of deadline
         const liquidityParameter = ethers.parseEther(categorySettings.liquidityParameter);
 
         // Get market creation fee (if any)

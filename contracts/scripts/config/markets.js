@@ -37,7 +37,7 @@ export const MARKET_CONFIG = {
     categorySettings: {
         crypto: {
             defaultDuration: 24 * 60 * 60, // 1 day
-            liquidityParameter: '50',
+            liquidityParameter: '100', // Increased from 50 to meet contract minimum
         },
         sports: {
             defaultDuration: 7 * 24 * 60 * 60, // 1 week
