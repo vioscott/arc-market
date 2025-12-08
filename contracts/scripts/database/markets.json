@@ -839,6 +839,666 @@
         "Technology",
         "gdelt"
       ]
+    },
+    "27": {
+      "marketId": 27,
+      "marketAddress": "0xDd54213604BcD8E6309F889dD9f2b3942E9Bfc8B",
+      "question": "Will Bitcoin (BTC) be 10% higher than $88,301 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/bitcoin",
+      "closeTime": 1765723916,
+      "createdAt": 1765119122,
+      "liquidityParameter": "100",
+      "eventId": "crypto-bitcoin-97131-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "bitcoin",
+        "symbol": "btc",
+        "currentPrice": 88301,
+        "targetPrice": 97131,
+        "threshold": 1.1
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "28": {
+      "marketId": 28,
+      "marketAddress": "0x9b1982c314eC51181EeE0bbD906001E0DF542e58",
+      "question": "Will Bitcoin (BTC) be 20% higher than $88,301 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/bitcoin",
+      "closeTime": 1765723916,
+      "createdAt": 1765119125,
+      "liquidityParameter": "100",
+      "eventId": "crypto-bitcoin-105961-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "bitcoin",
+        "symbol": "btc",
+        "currentPrice": 88301,
+        "targetPrice": 105961,
+        "threshold": 1.2
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "29": {
+      "marketId": 29,
+      "marketAddress": "0xA4E7336955BD3139b93fD5b6cA5a3346EFca95bd",
+      "question": "Will Bitcoin (BTC) be 10% lower than $88,301 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/bitcoin",
+      "closeTime": 1765723916,
+      "createdAt": 1765119129,
+      "liquidityParameter": "100",
+      "eventId": "crypto-bitcoin-79471-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "bitcoin",
+        "symbol": "btc",
+        "currentPrice": 88301,
+        "targetPrice": 79471,
+        "threshold": 0.9
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "30": {
+      "marketId": 30,
+      "marketAddress": "0x3802535F23D3a8112b4f9F5C3bCDB203D2df0491",
+      "question": "Will Ethereum (ETH) be 10% higher than $2,952.75 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/ethereum",
+      "closeTime": 1765723916,
+      "createdAt": 1765119132,
+      "liquidityParameter": "100",
+      "eventId": "crypto-ethereum-3248-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "ethereum",
+        "symbol": "eth",
+        "currentPrice": 2952.75,
+        "targetPrice": 3248,
+        "threshold": 1.1
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "31": {
+      "marketId": 31,
+      "marketAddress": "0x7470592Ee9D1edB4301DE1cE289DC6e5166C7687",
+      "question": "Will Ethereum (ETH) be 20% higher than $2,952.75 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/ethereum",
+      "closeTime": 1765723916,
+      "createdAt": 1765119135,
+      "liquidityParameter": "100",
+      "eventId": "crypto-ethereum-3543-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "ethereum",
+        "symbol": "eth",
+        "currentPrice": 2952.75,
+        "targetPrice": 3543,
+        "threshold": 1.2
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "32": {
+      "marketId": 32,
+      "marketAddress": "0x82539b7A999F232Bb4a9A502fb6D433dDdD8E4F4",
+      "question": "Will Ethereum (ETH) be 10% lower than $2,952.75 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/ethereum",
+      "closeTime": 1765723916,
+      "createdAt": 1765119138,
+      "liquidityParameter": "100",
+      "eventId": "crypto-ethereum-2657-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "ethereum",
+        "symbol": "eth",
+        "currentPrice": 2952.75,
+        "targetPrice": 2657,
+        "threshold": 0.9
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "33": {
+      "marketId": 33,
+      "marketAddress": "0x18B246B87E9BE002C3930cdb32095d61aFab0E4E",
+      "question": "Will Tether (USDT) be 10% higher than $1 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/tether",
+      "closeTime": 1765723916,
+      "createdAt": 1765119141,
+      "liquidityParameter": "100",
+      "eventId": "crypto-tether-1-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "tether",
+        "symbol": "usdt",
+        "currentPrice": 1,
+        "targetPrice": 1,
+        "threshold": 1.1
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "34": {
+      "marketId": 34,
+      "marketAddress": "0x325D970A9501A123E7027cE8819bb196B8fD4650",
+      "question": "Will Tether (USDT) be 20% higher than $1 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/tether",
+      "closeTime": 1765723916,
+      "createdAt": 1765119145,
+      "liquidityParameter": "100",
+      "eventId": "crypto-tether-1-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "tether",
+        "symbol": "usdt",
+        "currentPrice": 1,
+        "targetPrice": 1,
+        "threshold": 1.2
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "35": {
+      "marketId": 35,
+      "marketAddress": "0x1a11122A51ff19D33996daCC6F3e099CC660CC64",
+      "question": "Will Tether (USDT) be 10% lower than $1 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/tether",
+      "closeTime": 1765723916,
+      "createdAt": 1765119155,
+      "liquidityParameter": "100",
+      "eventId": "crypto-tether-1-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "tether",
+        "symbol": "usdt",
+        "currentPrice": 1,
+        "targetPrice": 1,
+        "threshold": 0.9
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "36": {
+      "marketId": 36,
+      "marketAddress": "0x82a043BAF4B706fA7e282FeAfdecd29194DA4f14",
+      "question": "Will XRP (XRP) be 10% higher than $2 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/ripple",
+      "closeTime": 1765723916,
+      "createdAt": 1765119161,
+      "liquidityParameter": "100",
+      "eventId": "crypto-ripple-2-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "ripple",
+        "symbol": "xrp",
+        "currentPrice": 2,
+        "targetPrice": 2,
+        "threshold": 1.1
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "37": {
+      "marketId": 37,
+      "marketAddress": "0x4a8c4C4b72f349585efD6D0Bf9565c03E7c59Ba3",
+      "question": "Will XRP (XRP) be 20% higher than $2 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/ripple",
+      "closeTime": 1765723916,
+      "createdAt": 1765119165,
+      "liquidityParameter": "100",
+      "eventId": "crypto-ripple-2-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "ripple",
+        "symbol": "xrp",
+        "currentPrice": 2,
+        "targetPrice": 2,
+        "threshold": 1.2
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "38": {
+      "marketId": 38,
+      "marketAddress": "0xe56d97A84754b36fa926cf7aA83698B4Dcb0a869",
+      "question": "Will XRP (XRP) be 10% lower than $2 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/ripple",
+      "closeTime": 1765723916,
+      "createdAt": 1765119169,
+      "liquidityParameter": "100",
+      "eventId": "crypto-ripple-2-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "ripple",
+        "symbol": "xrp",
+        "currentPrice": 2,
+        "targetPrice": 2,
+        "threshold": 0.9
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "39": {
+      "marketId": 39,
+      "marketAddress": "0x541f2552915Af4cEc718C296928052394dcCEDF8",
+      "question": "Will BNB (BNB) be 10% higher than $875.69 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/binancecoin",
+      "closeTime": 1765723916,
+      "createdAt": 1765119172,
+      "liquidityParameter": "100",
+      "eventId": "crypto-binancecoin-963-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "binancecoin",
+        "symbol": "bnb",
+        "currentPrice": 875.69,
+        "targetPrice": 963,
+        "threshold": 1.1
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "40": {
+      "marketId": 40,
+      "marketAddress": "0xCf0005b1d9CF4896C68CC7Fc57EF05c628a5C504",
+      "question": "Will BNB (BNB) be 20% higher than $875.69 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/binancecoin",
+      "closeTime": 1765723916,
+      "createdAt": 1765119176,
+      "liquidityParameter": "100",
+      "eventId": "crypto-binancecoin-1051-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "binancecoin",
+        "symbol": "bnb",
+        "currentPrice": 875.69,
+        "targetPrice": 1051,
+        "threshold": 1.2
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "41": {
+      "marketId": 41,
+      "marketAddress": "0xEc115E7B0f0C062317792855120783cB8915812D",
+      "question": "Will BNB (BNB) be 10% lower than $875.69 by 14/12/2025?",
+      "category": "Crypto",
+      "sourceUrl": "https://www.coingecko.com/en/coins/binancecoin",
+      "closeTime": 1765723916,
+      "createdAt": 1765119179,
+      "liquidityParameter": "100",
+      "eventId": "crypto-binancecoin-788-1765723916",
+      "eventType": "crypto",
+      "eventData": {
+        "coinId": "binancecoin",
+        "symbol": "bnb",
+        "currentPrice": 875.69,
+        "targetPrice": 788,
+        "threshold": 0.9
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Crypto",
+        "crypto"
+      ]
+    },
+    "42": {
+      "marketId": 42,
+      "marketAddress": "0x4941ba654258D3B4251A452466f515d9E36f86Cd",
+      "question": "Will Nuggets beat Bucks on 09/12/2025?",
+      "category": "Sports",
+      "sourceUrl": "https://www.nba.com",
+      "closeTime": 1765291915,
+      "createdAt": 1765119183,
+      "liquidityParameter": "100",
+      "eventId": "nba-Nuggets-Bucks-1765291915",
+      "eventType": "sports",
+      "eventData": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Nuggets",
+        "awayTeam": "Bucks",
+        "gameTime": 1765291915
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Sports",
+        "sports"
+      ]
+    },
+    "43": {
+      "marketId": 43,
+      "marketAddress": "0xd6f25544377C916Cd70a27d5398a06C96d433CDB",
+      "question": "Will Heat beat Warriors on 10/12/2025?",
+      "category": "Sports",
+      "sourceUrl": "https://www.nba.com",
+      "closeTime": 1765378315,
+      "createdAt": 1765119194,
+      "liquidityParameter": "100",
+      "eventId": "nba-Heat-Warriors-1765378315",
+      "eventType": "sports",
+      "eventData": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Heat",
+        "awayTeam": "Warriors",
+        "gameTime": 1765378315
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Sports",
+        "sports"
+      ]
+    },
+    "44": {
+      "marketId": 44,
+      "marketAddress": "0xFB3EFe7DFD2f3580d1966F463f5231d429FF5644",
+      "question": "Will Nuggets beat Clippers on 11/12/2025?",
+      "category": "Sports",
+      "sourceUrl": "https://www.nba.com",
+      "closeTime": 1765464715,
+      "createdAt": 1765119197,
+      "liquidityParameter": "100",
+      "eventId": "nba-Nuggets-Clippers-1765464715",
+      "eventType": "sports",
+      "eventData": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Nuggets",
+        "awayTeam": "Clippers",
+        "gameTime": 1765464715
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Sports",
+        "sports"
+      ]
+    },
+    "45": {
+      "marketId": 45,
+      "marketAddress": "0x02D0E688CE6D0b1BBA507d35992b9846Ad1F69D5",
+      "question": "Will the UN Climate Summit reach a new agreement by end of month?",
+      "category": "Politics",
+      "sourceUrl": "https://www.gdeltproject.org",
+      "closeTime": 1767711115,
+      "createdAt": 1765119201,
+      "liquidityParameter": "200",
+      "eventId": "gdelt-mock-1765119115460-mimdo0c3u",
+      "eventType": "gdelt",
+      "eventData": {
+        "mock": true
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Politics",
+        "gdelt"
+      ]
+    },
+    "46": {
+      "marketId": 46,
+      "marketAddress": "0xAbEbA4051Cf55C96E1A51750ac54aC6fDe4f341a",
+      "question": "Will global tech stocks rise by 5% this week?",
+      "category": "Economics",
+      "sourceUrl": "https://www.gdeltproject.org",
+      "closeTime": 1765723915,
+      "createdAt": 1765119203,
+      "liquidityParameter": "100",
+      "eventId": "gdelt-mock-1765119115460-qfdv1tmku",
+      "eventType": "gdelt",
+      "eventData": {
+        "mock": true
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Economics",
+        "gdelt"
+      ]
+    },
+    "47": {
+      "marketId": 47,
+      "marketAddress": "0x171Bef9A8434bbCE35cBD11c2869ae7976EE08a5",
+      "question": "Will a major AI breakthrough be announced this month?",
+      "category": "Technology",
+      "sourceUrl": "https://www.gdeltproject.org",
+      "closeTime": 1767711115,
+      "createdAt": 1765119209,
+      "liquidityParameter": "100",
+      "eventId": "gdelt-mock-1765119115460-doj1ftdr6",
+      "eventType": "gdelt",
+      "eventData": {
+        "mock": true
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0x9CA978CAD623eb4630b8D1B93CdA2eF60a1b1C9f",
+      "tags": [
+        "Technology",
+        "gdelt"
+      ]
     }
   },
   "events": {
@@ -1208,12 +1868,289 @@
         "mock": true
       },
       "fetchedAt": 1765072755370
+    },
+    "crypto-bitcoin-97131-1765723916": {
+      "eventId": "crypto-bitcoin-97131-1765723916",
+      "eventType": "crypto",
+      "source": "coingecko",
+      "question": "Will Bitcoin (BTC) be 10% higher than $88,301 by 14/12/2025?",
+      "category": "Crypto",
+      "closeTime": 1765723916,
+      "sourceUrl": "https://www.coingecko.com/en/coins/bitcoin",
+      "metadata": {
+        "coinId": "bitcoin",
+        "symbol": "btc",
+        "currentPrice": 88301,
+        "targetPrice": 97131,
+        "threshold": 1.1
+      },
+      "fetchedAt": 1765119122840
+    },
+    "crypto-bitcoin-105961-1765723916": {
+      "eventId": "crypto-bitcoin-105961-1765723916",
+      "eventType": "crypto",
+      "source": "coingecko",
+      "question": "Will Bitcoin (BTC) be 20% higher than $88,301 by 14/12/2025?",
+      "category": "Crypto",
+      "closeTime": 1765723916,
+      "sourceUrl": "https://www.coingecko.com/en/coins/bitcoin",
+      "metadata": {
+        "coinId": "bitcoin",
+        "symbol": "btc",
+        "currentPrice": 88301,
+        "targetPrice": 105961,
+        "threshold": 1.2
+      },
+      "fetchedAt": 1765119125825
+    },
+    "crypto-bitcoin-79471-1765723916": {
+      "eventId": "crypto-bitcoin-79471-1765723916",
+      "eventType": "crypto",
+      "source": "coingecko",
+      "question": "Will Bitcoin (BTC) be 10% lower than $88,301 by 14/12/2025?",
+      "category": "Crypto",
+      "closeTime": 1765723916,
+      "sourceUrl": "https://www.coingecko.com/en/coins/bitcoin",
+      "metadata": {
+        "coinId": "bitcoin",
+        "symbol": "btc",
+        "currentPrice": 88301,
+        "targetPrice": 79471,
+        "threshold": 0.9
+      },
+      "fetchedAt": 1765119129084
+    },
+    "crypto-ethereum-3248-1765723916": {
+      "eventId": "crypto-ethereum-3248-1765723916",
+      "eventType": "crypto",
+      "source": "coingecko",
+      "question": "Will Ethereum (ETH) be 10% higher than $2,952.75 by 14/12/2025?",
+      "category": "Crypto",
+      "closeTime": 1765723916,
+      "sourceUrl": "https://www.coingecko.com/en/coins/ethereum",
+      "metadata": {
+        "coinId": "ethereum",
+        "symbol": "eth",
+        "currentPrice": 2952.75,
+        "targetPrice": 3248,
+        "threshold": 1.1
+      },
+      "fetchedAt": 1765119132063
+    },
+    "crypto-ethereum-3543-1765723916": {
+      "eventId": "crypto-ethereum-3543-1765723916",
+      "eventType": "crypto",
+      "source": "coingecko",
+      "question": "Will Ethereum (ETH) be 20% higher than $2,952.75 by 14/12/2025?",
+      "category": "Crypto",
+      "closeTime": 1765723916,
+      "sourceUrl": "https://www.coingecko.com/en/coins/ethereum",
+      "metadata": {
+        "coinId": "ethereum",
+        "symbol": "eth",
+        "currentPrice": 2952.75,
+        "targetPrice": 3543,
+        "threshold": 1.2
+      },
+      "fetchedAt": 1765119135950
+    },
+    "crypto-ethereum-2657-1765723916": {
+      "eventId": "crypto-ethereum-2657-1765723916",
+      "eventType": "crypto",
+      "source": "coingecko",
+      "question": "Will Ethereum (ETH) be 10% lower than $2,952.75 by 14/12/2025?",
+      "category": "Crypto",
+      "closeTime": 1765723916,
+      "sourceUrl": "https://www.coingecko.com/en/coins/ethereum",
+      "metadata": {
+        "coinId": "ethereum",
+        "symbol": "eth",
+        "currentPrice": 2952.75,
+        "targetPrice": 2657,
+        "threshold": 0.9
+      },
+      "fetchedAt": 1765119138823
+    },
+    "crypto-tether-1-1765723916": {
+      "eventId": "crypto-tether-1-1765723916",
+      "eventType": "crypto",
+      "source": "coingecko",
+      "question": "Will Tether (USDT) be 10% lower than $1 by 14/12/2025?",
+      "category": "Crypto",
+      "closeTime": 1765723916,
+      "sourceUrl": "https://www.coingecko.com/en/coins/tether",
+      "metadata": {
+        "coinId": "tether",
+        "symbol": "usdt",
+        "currentPrice": 1,
+        "targetPrice": 1,
+        "threshold": 0.9
+      },
+      "fetchedAt": 1765119155412
+    },
+    "crypto-ripple-2-1765723916": {
+      "eventId": "crypto-ripple-2-1765723916",
+      "eventType": "crypto",
+      "source": "coingecko",
+      "question": "Will XRP (XRP) be 10% lower than $2 by 14/12/2025?",
+      "category": "Crypto",
+      "closeTime": 1765723916,
+      "sourceUrl": "https://www.coingecko.com/en/coins/ripple",
+      "metadata": {
+        "coinId": "ripple",
+        "symbol": "xrp",
+        "currentPrice": 2,
+        "targetPrice": 2,
+        "threshold": 0.9
+      },
+      "fetchedAt": 1765119169186
+    },
+    "crypto-binancecoin-963-1765723916": {
+      "eventId": "crypto-binancecoin-963-1765723916",
+      "eventType": "crypto",
+      "source": "coingecko",
+      "question": "Will BNB (BNB) be 10% higher than $875.69 by 14/12/2025?",
+      "category": "Crypto",
+      "closeTime": 1765723916,
+      "sourceUrl": "https://www.coingecko.com/en/coins/binancecoin",
+      "metadata": {
+        "coinId": "binancecoin",
+        "symbol": "bnb",
+        "currentPrice": 875.69,
+        "targetPrice": 963,
+        "threshold": 1.1
+      },
+      "fetchedAt": 1765119172952
+    },
+    "crypto-binancecoin-1051-1765723916": {
+      "eventId": "crypto-binancecoin-1051-1765723916",
+      "eventType": "crypto",
+      "source": "coingecko",
+      "question": "Will BNB (BNB) be 20% higher than $875.69 by 14/12/2025?",
+      "category": "Crypto",
+      "closeTime": 1765723916,
+      "sourceUrl": "https://www.coingecko.com/en/coins/binancecoin",
+      "metadata": {
+        "coinId": "binancecoin",
+        "symbol": "bnb",
+        "currentPrice": 875.69,
+        "targetPrice": 1051,
+        "threshold": 1.2
+      },
+      "fetchedAt": 1765119176598
+    },
+    "crypto-binancecoin-788-1765723916": {
+      "eventId": "crypto-binancecoin-788-1765723916",
+      "eventType": "crypto",
+      "source": "coingecko",
+      "question": "Will BNB (BNB) be 10% lower than $875.69 by 14/12/2025?",
+      "category": "Crypto",
+      "closeTime": 1765723916,
+      "sourceUrl": "https://www.coingecko.com/en/coins/binancecoin",
+      "metadata": {
+        "coinId": "binancecoin",
+        "symbol": "bnb",
+        "currentPrice": 875.69,
+        "targetPrice": 788,
+        "threshold": 0.9
+      },
+      "fetchedAt": 1765119179828
+    },
+    "nba-Nuggets-Bucks-1765291915": {
+      "eventId": "nba-Nuggets-Bucks-1765291915",
+      "eventType": "sports",
+      "source": "mock-nba",
+      "question": "Will Nuggets beat Bucks on 09/12/2025?",
+      "category": "Sports",
+      "closeTime": 1765291915,
+      "sourceUrl": "https://www.nba.com",
+      "metadata": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Nuggets",
+        "awayTeam": "Bucks",
+        "gameTime": 1765291915
+      },
+      "fetchedAt": 1765119183458
+    },
+    "nba-Heat-Warriors-1765378315": {
+      "eventId": "nba-Heat-Warriors-1765378315",
+      "eventType": "sports",
+      "source": "mock-nba",
+      "question": "Will Heat beat Warriors on 10/12/2025?",
+      "category": "Sports",
+      "closeTime": 1765378315,
+      "sourceUrl": "https://www.nba.com",
+      "metadata": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Heat",
+        "awayTeam": "Warriors",
+        "gameTime": 1765378315
+      },
+      "fetchedAt": 1765119194107
+    },
+    "nba-Nuggets-Clippers-1765464715": {
+      "eventId": "nba-Nuggets-Clippers-1765464715",
+      "eventType": "sports",
+      "source": "mock-nba",
+      "question": "Will Nuggets beat Clippers on 11/12/2025?",
+      "category": "Sports",
+      "closeTime": 1765464715,
+      "sourceUrl": "https://www.nba.com",
+      "metadata": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Nuggets",
+        "awayTeam": "Clippers",
+        "gameTime": 1765464715
+      },
+      "fetchedAt": 1765119197916
+    },
+    "gdelt-mock-1765119115460-mimdo0c3u": {
+      "eventId": "gdelt-mock-1765119115460-mimdo0c3u",
+      "eventType": "gdelt",
+      "source": "gdelt-mock",
+      "question": "Will the UN Climate Summit reach a new agreement by end of month?",
+      "category": "Politics",
+      "closeTime": 1767711115,
+      "sourceUrl": "https://www.gdeltproject.org",
+      "metadata": {
+        "mock": true
+      },
+      "fetchedAt": 1765119201176
+    },
+    "gdelt-mock-1765119115460-qfdv1tmku": {
+      "eventId": "gdelt-mock-1765119115460-qfdv1tmku",
+      "eventType": "gdelt",
+      "source": "gdelt-mock",
+      "question": "Will global tech stocks rise by 5% this week?",
+      "category": "Economics",
+      "closeTime": 1765723915,
+      "sourceUrl": "https://www.gdeltproject.org",
+      "metadata": {
+        "mock": true
+      },
+      "fetchedAt": 1765119203987
+    },
+    "gdelt-mock-1765119115460-doj1ftdr6": {
+      "eventId": "gdelt-mock-1765119115460-doj1ftdr6",
+      "eventType": "gdelt",
+      "source": "gdelt-mock",
+      "question": "Will a major AI breakthrough be announced this month?",
+      "category": "Technology",
+      "closeTime": 1767711115,
+      "sourceUrl": "https://www.gdeltproject.org",
+      "metadata": {
+        "mock": true
+      },
+      "fetchedAt": 1765119209160
     }
   },
   "resolutions": {},
   "metadata": {
     "version": "1.0.0",
     "createdAt": 1764940266779,
-    "lastUpdated": 1765072755370
+    "lastUpdated": 1765119209160
   }
 }
