@@ -30,9 +30,9 @@ export const arcTestnetChain = {
 // Contract addresses (will be populated after deployment)
 export const CONTRACT_ADDRESSES = {
     USDC: process.env.NEXT_PUBLIC_USDC_ADDRESS || '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',
-    MarketFactory: process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS || '0xa52e6618a12E5932256cC0C9EAc5Efd2C34C70Af',
-    Oracle: process.env.NEXT_PUBLIC_ORACLE_ADDRESS || '0xf9f08F485363B603Ce021CEEF7B4C2f0bc180ac9',
-    OutcomeToken: process.env.NEXT_PUBLIC_OUTCOME_TOKEN_ADDRESS || '0x83C754b59cEa49F441602DfF046806f273675b20',
+    MarketFactory: process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS || '0x1E9dD2639f4508Bc390e1e85DbEdefbf52e7440e',
+    Oracle: process.env.NEXT_PUBLIC_ORACLE_ADDRESS || '0xB38326843A22B2cF2A23a4938b37d2a7ad9AaB38',
+    OutcomeToken: process.env.NEXT_PUBLIC_OUTCOME_TOKEN_ADDRESS || '0x3848AB88D9A1B6D9c162B6a8Ef929FB1bf90f148',
 };
 
 // Wagmi configuration

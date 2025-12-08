@@ -256,12 +256,14 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
         if (!hasAllowance) {
             // Approve max amount to avoid needing multiple approvals
             setShouldAutoBuy(true);
-            const maxUint256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+            // Approve exact amount needed (maxCost) to match user trust and expectation
+            const maxCost = cost * BigInt(101) / BigInt(100);
+            setShouldAutoBuy(true);
             writeApprove({
                 address: CONTRACT_ADDRESSES.USDC as `0x${string}`,
                 abi: ERC20_ABI,
                 functionName: 'approve',
-                args: [marketAddress, maxUint256],
+                args: [marketAddress, maxCost],
             });
         } else {
             // Buy
