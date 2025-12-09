@@ -241,4 +241,4 @@ This is a **testnet application** for educational and experimental purposes only
 
 ---
 
-Built with ❤️ on Arc Testnet
+Built on Arc Testnet

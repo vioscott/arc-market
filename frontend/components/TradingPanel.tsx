@@ -68,60 +68,55 @@ interface TradingPanelProps {
     marketId: number;
     yesPrice: number;
     noPrice: number;
+    onTradeSuccess?: (cost: bigint) => void;
 }
 
-export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPanelProps) {
+export default function TradingPanel({ marketId, yesPrice, noPrice, onTradeSuccess }: TradingPanelProps) {
     const { address, isConnected } = useAccount();
     const { connect, connectors } = useConnect();
+
+    // State
     const [selectedOutcome, setSelectedOutcome] = useState<'yes' | 'no'>('yes');
     const [amount, setAmount] = useState('');
     const [error, setError] = useState('');
     const [mounted, setMounted] = useState(false);
     const [showWalletOptions, setShowWalletOptions] = useState(false);
+    const [shouldAutoBuy, setShouldAutoBuy] = useState(false);
 
-    // 1. Get Market Address (or use mock for testing)
-    // Note: In production, this should fetch from MarketFactory
-    // For now, we'll use a placeholder since markets may not exist yet
+    // Success State
+    const [approvalSuccess, setApprovalSuccess] = useState(false);
+    const [buySuccess, setBuySuccess] = useState(false);
+    const [lastPurchasedShares, setLastPurchasedShares] = useState(0);
+
+    // 1. Get Market Address
     const { data: marketAddressFromContract } = useReadContract({
         address: CONTRACT_ADDRESSES.MarketFactory as `0x${string}`,
         abi: MARKET_FACTORY_ABI,
         functionName: 'getMarket',
         args: [BigInt(marketId)],
-        query: {
-            // Don't throw errors if market doesn't exist
-            retry: false,
-        }
+        query: { retry: false }
     });
 
-    // Use contract address if available, otherwise use a mock for UI testing
-    // TODO: Remove this mock once real markets are created
     const marketAddress = marketAddressFromContract && marketAddressFromContract !== '0x0000000000000000000000000000000000000000'
         ? marketAddressFromContract
         : null;
-    const isRealMarket = !!marketAddressFromContract;
 
-    // 2. Get USDC Balance (native currency on Arc Testnet)
+    // 2. Get USDC Balance
     const { data: usdcBalance } = useBalance({
         address: address,
         chainId: arcTestnetChain.id,
-        // No token parameter - USDC is native on Arc Testnet
     });
 
     // 3. Calculate Shares & Cost
-    // We assume user inputs USDC amount, we estimate shares
-    // Shares = Amount / Price
-    // Note: This is an estimation. For exact LMSR, we'd need to iterate or ask user for shares.
-    // For this UI, we'll calculate shares based on current price and input amount.
     const currentPrice = selectedOutcome === 'yes' ? yesPrice : noPrice;
     const estimatedSharesNum = amount && parseFloat(amount) > 0 && currentPrice > 0
         ? parseFloat(amount) / currentPrice
         : 0;
 
-    // Convert to BigInt for contract (18 decimals for shares)
     const sharesAmount = parseUnits(estimatedSharesNum.toFixed(18), 18);
 
     // 4. Get Exact Cost from Contract
-    const { data: exactCost } = useReadContract({
+    const { data: exactCost, isLoading: isLoadingCost } = useReadContract({
         address: marketAddress as `0x${string}`,
         abi: MARKET_ABI,
         functionName: 'calculateCost',
@@ -139,7 +134,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
         args: [address!, marketAddress as `0x${string}`],
         query: {
             enabled: !!address && !!marketAddress,
-            refetchInterval: 2000, // Poll every 2 seconds to catch approval changes
+            refetchInterval: 2000,
         }
     });
 
@@ -156,10 +151,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
         hash: buyTxHash,
     });
 
-    // Track auto-buy state
-    const [shouldAutoBuy, setShouldAutoBuy] = useState(false);
-
-    // Derived State (must be before useEffect hooks that use these values)
+    // Derived State
     const cost = exactCost || BigInt(0);
     const hasAllowance = allowance ? allowance >= cost : false;
     const balance = usdcBalance ? parseFloat(usdcBalance.formatted) : 0;
@@ -171,71 +163,69 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
         setMounted(true);
     }, []);
 
+    // Auto-buy after approval
     useEffect(() => {
         if (isApproveSuccess) {
-            // Force immediate refetch after approval
             refetchAllowance().then(() => {
                 if (shouldAutoBuy && marketAddress) {
-                    // Trigger buy automatically
-                    const maxCost = cost * BigInt(101) / BigInt(100);
-                    writeBuy({
-                        address: marketAddress,
-                        abi: MARKET_ABI,
-                        functionName: 'buyShares',
-                        args: [selectedOutcome === 'yes' ? 0 : 1, sharesAmount, maxCost],
-                    });
+                    const maxCost = cost > BigInt(0) ? cost * BigInt(101) / BigInt(100) : BigInt(0);
+                    if (maxCost > BigInt(0)) {
+                        writeBuy({
+                            address: marketAddress,
+                            abi: MARKET_ABI,
+                            functionName: 'buyShares',
+                            args: [selectedOutcome === 'yes' ? 0 : 1, sharesAmount, maxCost],
+                        });
+                    }
                     setShouldAutoBuy(false);
                 }
             });
         }
     }, [isApproveSuccess, refetchAllowance, shouldAutoBuy, cost, marketAddress, selectedOutcome, sharesAmount, writeBuy]);
 
+    // Handle Buy Success
     useEffect(() => {
         if (isBuySuccess) {
-            // alert(`Successfully bought ${selectedOutcome.toUpperCase()} shares!`); // Removed alert in favor of UI message
+            if (onTradeSuccess && cost > BigInt(0)) {
+                onTradeSuccess(cost);
+            }
+
+            // Save shares for popup before clearing amount
+            if (estimatedSharesNum > 0) {
+                setLastPurchasedShares(estimatedSharesNum);
+            }
+
             setAmount('');
             setShouldAutoBuy(false);
         }
-    }, [isBuySuccess, selectedOutcome]);
-
-    // Debug logging
-    useEffect(() => {
-        if (allowance !== undefined && cost > BigInt(0)) {
-            console.log('Allowance check:', {
-                allowance: allowance.toString(),
-                cost: cost.toString(),
-                hasAllowance,
-                isApproveSuccess
-            });
-        }
-    }, [allowance, cost, hasAllowance, isApproveSuccess]);
-
-    // Track approval success
-    const [approvalSuccess, setApprovalSuccess] = React.useState(false);
-    const [buySuccess, setBuySuccess] = React.useState(false);
+    }, [isBuySuccess]); // Keep dependencies minimal
 
     // Reset success states when amount changes
-    React.useEffect(() => {
-        setApprovalSuccess(false);
-        setBuySuccess(false);
+    useEffect(() => {
+        if (amount) {
+            setApprovalSuccess(false);
+            setBuySuccess(false);
+        }
     }, [amount, selectedOutcome]);
 
     // Show approval success message
-    React.useEffect(() => {
+    useEffect(() => {
         if (isApproveSuccess && !isWaitingApprove) {
             setApprovalSuccess(true);
-            setTimeout(() => setApprovalSuccess(false), 3000);
+            const timer = setTimeout(() => setApprovalSuccess(false), 3000);
+            return () => clearTimeout(timer);
         }
     }, [isApproveSuccess, isWaitingApprove]);
 
-    // Show buy success message
-    React.useEffect(() => {
+    // Show buy success message (Toast/Banner)
+    useEffect(() => {
         if (isBuySuccess && !isWaitingBuy) {
             setBuySuccess(true);
-            setTimeout(() => {
+            // Auto hide after 5 seconds if not closed manually
+            const timer = setTimeout(() => {
                 setBuySuccess(false);
-                setAmount('');
-            }, 5000);
+            }, 8000);
+            return () => clearTimeout(timer);
         }
     }, [isBuySuccess, isWaitingBuy]);
 
@@ -254,11 +244,14 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
         }
 
         if (!hasAllowance) {
-            // Approve max amount to avoid needing multiple approvals
+            if (cost <= BigInt(0)) {
+                setError('Calculating cost... please wait');
+                return;
+            }
+
             setShouldAutoBuy(true);
-            // Approve exact amount needed (maxCost) to match user trust and expectation
             const maxCost = cost * BigInt(101) / BigInt(100);
-            setShouldAutoBuy(true);
+
             writeApprove({
                 address: CONTRACT_ADDRESSES.USDC as `0x${string}`,
                 abi: ERC20_ABI,
@@ -266,8 +259,6 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
                 args: [marketAddress, maxCost],
             });
         } else {
-            // Buy
-            // Add 1% slippage to cost
             const maxCost = cost * BigInt(101) / BigInt(100);
             writeBuy({
                 address: marketAddress,
@@ -293,9 +284,30 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
 
     return (
         <div className="card sticky top-24">
+            {/* Success Popup Overlay - Modal Style */}
+            {isBuySuccess && buySuccess && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-2xl animate-in fade-in duration-200 p-4">
+                    <div className="text-center p-6 bg-gray-900 border border-green-500/30 rounded-xl shadow-2xl shadow-green-500/20 transform scale-100 animate-in zoom-in-95 duration-200 w-full">
+                        <div className="mx-auto w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">Trade Successful!</h3>
+                        <p className="text-gray-400 mb-6 text-sm">
+                            You purchased {lastPurchasedShares.toFixed(2)} {selectedOutcome.toUpperCase()} shares.
+                        </p>
+                        <button
+                            onClick={() => setBuySuccess(false)}
+                            className="w-full py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition-colors"
+                        >
+                            Done
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <h3 className="text-xl font-bold mb-6">Trade</h3>
-
-
 
             {/* Outcome Selector */}
             <div className="grid grid-cols-2 gap-3 mb-6">
@@ -398,29 +410,6 @@ export default function TradingPanel({ marketId, yesPrice, noPrice }: TradingPan
                 <div className="mb-4 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
                     <p className="text-sm text-orange-400">
                         Market contract not found. This market might not be deployed yet.
-                    </p>
-                </div>
-            )}
-
-            {/* Success Messages */}
-            {approvalSuccess && (
-                <div className="mb-4 p-3 rounded-lg bg-yes/10 border border-yes/20">
-                    <p className="text-sm text-yes flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        USDC approved! Proceeding to buy...
-                    </p>
-                </div>
-            )}
-
-            {buySuccess && (
-                <div className="mb-4 p-3 rounded-lg bg-yes/10 border border-yes/20">
-                    <p className="text-sm text-yes flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Success! You've purchased {estimatedSharesNum.toFixed(2)} {selectedOutcome.toUpperCase()} shares.
                     </p>
                 </div>
             )}

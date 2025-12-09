@@ -15,11 +15,16 @@ async function main() {
     console.log("Deploying with account:", deployer.address);
     console.log("Account balance:", (await hre.ethers.provider.getBalance(deployer.address)).toString());
 
-    // Arc Testnet USDC address (native token)
-    const USDC_ADDRESS = "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d";
+    // Deploy MockUSDC
+    console.log("\n📝 Deploying MockUSDC...");
+    const MockUSDC = await hre.ethers.getContractFactory("MockUSDC");
+    const mockUSDC = await MockUSDC.deploy();
+    await mockUSDC.waitForDeployment();
+    const USDC_ADDRESS = await mockUSDC.getAddress();
+    console.log("✅ MockUSDC deployed to:", USDC_ADDRESS);
 
     // Configuration
-    const MIN_LIQUIDITY_PARAMETER = hre.ethers.parseEther("100"); // 100 USDC minimum
+    const MIN_LIQUIDITY_PARAMETER = hre.ethers.parseUnits("100", 6); // 100 USDC (6 decimals)
     const REQUIRED_CONFIRMATIONS = 1; // 1-of-N for testing (change to 2+ for production)
     const TIME_LOCK_DURATION = 24 * 60 * 60; // 24 hours
     const DISPUTE_PERIOD = 48 * 60 * 60; // 48 hours

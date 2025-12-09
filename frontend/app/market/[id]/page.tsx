@@ -176,6 +176,19 @@ export default function MarketDetailPage() {
                                 marketId={market.marketId}
                                 yesPrice={yesPrice}
                                 noPrice={noPrice}
+                                onTradeSuccess={(cost) => {
+                                    // Optimistically update volume
+                                    // Volume in DB is stored as raw USDC units (6 decimals)
+                                    setMarket((prev) => {
+                                        if (!prev) return null;
+                                        const currentVol = BigInt(prev.volume || 0);
+                                        const newVol = currentVol + cost;
+                                        return {
+                                            ...prev,
+                                            volume: newVol.toString()
+                                        };
+                                    });
+                                }}
                             />
                         )}
                     </div>
