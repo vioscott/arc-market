@@ -1,8 +1,22 @@
-'use client';
 
-import { useAccount, useConnect, useDisconnect, useBalance, useSwitchChain } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useBalance, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useState, useEffect, useRef } from 'react';
 import { CONTRACT_ADDRESSES, arcTestnetChain } from '@/config/wagmi';
+import { parseUnits } from 'viem';
+
+// ERC20 Mint ABI
+const MOCK_USDC_ABI = [
+    {
+        name: 'mint',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'to', type: 'address' },
+            { name: 'amount', type: 'uint256' }
+        ],
+        outputs: []
+    }
+] as const;
 
 export default function WalletButton() {
     const { address, isConnected, chain } = useAccount();
@@ -13,11 +27,25 @@ export default function WalletButton() {
     const [mounted, setMounted] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Get USDC balance (native currency on Arc Testnet)
-    const { data: usdcBalance } = useBalance({
+    // Get USDC balance (ERC20)
+    const { data: usdcBalance, refetch: refetchBalance } = useBalance({
         address: address,
         chainId: arcTestnetChain.id,
+        token: CONTRACT_ADDRESSES.USDC as `0x${string}`,
     });
+
+    // Faucet Logic
+    const { writeContract: mintTokens, data: mintTxHash, isPending: isMinting } = useWriteContract();
+
+    const { isLoading: isWaitingMint, isSuccess: isMintSuccess } = useWaitForTransactionReceipt({
+        hash: mintTxHash,
+    });
+
+    useEffect(() => {
+        if (isMintSuccess) {
+            refetchBalance();
+        }
+    }, [isMintSuccess, refetchBalance]);
 
     useEffect(() => {
         setMounted(true);
@@ -36,6 +64,16 @@ export default function WalletButton() {
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }
     }, [showDropdown]);
+
+    const handleMint = () => {
+        if (!address) return;
+        mintTokens({
+            address: CONTRACT_ADDRESSES.USDC as `0x${string}`,
+            abi: MOCK_USDC_ABI,
+            functionName: 'mint',
+            args: [address, parseUnits('1000', 6)], // Mint 1000 USDC
+        });
+    };
 
     if (!mounted) {
         return (
@@ -84,13 +122,16 @@ export default function WalletButton() {
     // Check if on wrong network
     const isWrongNetwork = chain?.id !== arcTestnetChain.id;
 
+    // Show Faucet if balance is low (< 100 USDC)
+    const showFaucet = usdcBalance && parseFloat(usdcBalance.formatted) < 100;
+
     return (
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setShowDropdown(!showDropdown)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${isWrongNetwork
-                        ? 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20'
-                        : 'bg-[#141b2e] border border-[#1e293b] text-white hover:bg-[#1e293b]'
+                    ? 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20'
+                    : 'bg-[#141b2e] border border-[#1e293b] text-white hover:bg-[#1e293b]'
                     }`}
             >
                 {isWrongNetwork ? (
@@ -130,6 +171,20 @@ export default function WalletButton() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Faucet for Testnet */}
+                        {showFaucet && !isWrongNetwork && (
+                            <div className="my-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                                <p className="text-xs text-blue-300 mb-2">Need test funds?</p>
+                                <button
+                                    onClick={handleMint}
+                                    disabled={isMinting || isWaitingMint}
+                                    className="w-full px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-all disabled:opacity-50"
+                                >
+                                    {isMinting || isWaitingMint ? 'Minting...' : 'Get 1000 USDC (Testnet)'}
+                                </button>
+                            </div>
+                        )}
 
                         {/* Network Warning */}
                         {isWrongNetwork && (

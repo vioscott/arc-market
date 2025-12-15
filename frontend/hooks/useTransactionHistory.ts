@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { usePublicClient } from 'wagmi';
-import { parseAbiItem, formatUnits } from 'viem';
+import axios from 'axios';
+import { formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/config/wagmi';
 
 export interface HistoryItem {
@@ -13,97 +13,111 @@ export interface HistoryItem {
     txHash: string;
 }
 
+// ArcScan API Response Type
+interface ArcScanTx {
+    blockNumber: string;
+    timeStamp: string;
+    hash: string;
+    nonce: string;
+    blockHash: string;
+    from: string;
+    contractAddress: string;
+    to: string;
+    tokenID: string;
+    tokenName: string;
+    tokenSymbol: string;
+    tokenDecimal: string;
+    transactionIndex: string;
+    gas: string;
+    gasPrice: string;
+    gasUsed: string;
+    cumulativeGasUsed: string;
+    input: string;
+    confirmations: string;
+    tokenValue: string; // Amount
+}
+
 export function useTransactionHistory(userAddress?: string) {
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [loading, setLoading] = useState(false);
-    const publicClient = usePublicClient();
 
     useEffect(() => {
-        if (!userAddress || !publicClient) return;
+        if (!userAddress) return;
 
         async function fetchHistory() {
             setLoading(true);
             try {
-                // 1. Fetch OutcomeToken Mint/Burn events (All interactions)
-                // Filter by To (Mint) or From (Burn) == User
-                const mintLogs = await publicClient!.getLogs({
-                    address: CONTRACT_ADDRESSES.OutcomeToken as `0x${string}`,
-                    event: parseAbiItem('event TokensMinted(address indexed to, uint256 indexed tokenId, uint256 amount)'),
-                    args: { to: userAddress as `0x${string}` },
-                    fromBlock: 'earliest'
+                // Fetch ERC1155 Transfers (Outcome Tokens)
+                const response = await axios.get('https://testnet.arcscan.app/api', {
+                    params: {
+                        module: 'account',
+                        action: 'token1155tx', // ERC1155 transfers
+                        address: userAddress,
+                        startblock: 0,
+                        endblock: 99999999,
+                        sort: 'desc',
+                        apikey: '' // Public API often doesn't need key for low volume, or use env if available
+                    }
                 });
 
-                const burnLogs = await publicClient!.getLogs({
-                    address: CONTRACT_ADDRESSES.OutcomeToken as `0x${string}`,
-                    event: parseAbiItem('event TokensBurned(address indexed from, uint256 indexed tokenId, uint256 amount)'),
-                    args: { from: userAddress as `0x${string}` },
-                    fromBlock: 'earliest'
-                });
+                if (response.data.status === '1' && Array.isArray(response.data.result)) {
+                    const txs: ArcScanTx[] = response.data.result;
+                    const historyItems: HistoryItem[] = [];
 
-                const logs = [...mintLogs, ...burnLogs];
-                const historyItems: HistoryItem[] = [];
+                    for (const tx of txs) {
+                        // Filter for our OutcomeToken contract
+                        if (tx.contractAddress.toLowerCase() !== CONTRACT_ADDRESSES.OutcomeToken.toLowerCase()) {
+                            continue;
+                        }
 
-                for (const log of logs) {
-                    const block = await publicClient!.getBlock({ blockNumber: log.blockNumber });
-                    const tokenId = BigInt(log.args.tokenId!);
-                    const amountShares = Number(formatUnits(log.args.amount!, 18));
+                        const tokenId = BigInt(tx.tokenID);
+                        const amountShares = Number(tx.tokenValue); // Usually raw amount for 1155? or "value"? API usually returns "tokenValue" as amount for 1155.
 
-                    const marketId = Number(tokenId / BigInt(2));
-                    const outcome = tokenId % BigInt(2) === BigInt(0) ? 'YES' : 'NO';
-                    const isMint = log.eventName === 'TokensMinted';
+                        const marketId = Number(tokenId / BigInt(2));
+                        const outcome = tokenId % BigInt(2) === BigInt(0) ? 'YES' : 'NO';
 
-                    // For now, we estimate cost/payout or assume 0 if we can't easily link to Market event.
-                    // Ideal: Find corresponding SharesPurchased/Sold event in the SAME tx.
-                    // This requires checking the transaction receipt or logs from that tx.
+                        // Determine Type
+                        // Mint (from=0x0) -> BUY
+                        // Burn (to=0x0) -> SELL or REDEEM
+                        const isMint = tx.from === '0x0000000000000000000000000000000000000000';
+                        const isBurn = tx.to === '0x0000000000000000000000000000000000000000';
 
-                    // Let's try to fetch the Transaction Receipt logs to find the Market event (SharesPurchased/Sold/Redeemed)
-                    // This is "expensive" (N RPC calls), but okay for history tab for one user.
+                        // Approximate:
+                        // Mint = Buy
+                        // Burn = Sell/Redeem. Hard to distinguish without log topics, but simpler for display.
+                        let type: 'BUY' | 'SELL' | 'REDEEM' = 'BUY';
+                        if (isBurn) {
+                            type = 'SELL'; // Default to SELL for now. REDEEM is hard to distinguish just from 1155 transfer.
+                        } else if (!isMint) {
+                            // Transfer between users? Not supported in UI yet, but possible.
+                            continue;
+                        }
 
-                    // Optimization: We can just use the txHash to dedup, but we want the USDC amount.
-                    // The Market contract emits SharesPurchased/sharesSold which contains the cost/payout.
-
-                    // Let's do a simple heuristic first: 
-                    // If Mint -> Buy or Claim? (Claim burns winning token, wait. Claim burns winning tokens? No, Claim burns winning tokens.)
-                    // Market.sol: redeemShares calls outcomeToken.burn. So Claim = Burn.
-                    // Market.sol: buyShares calls outcomeToken.mint. So Buy = Mint.
-                    // Market.sol: sellShares calls outcomeToken.burn. So Sell = Burn.
-
-                    // So Mint = Buy. 
-                    // Burn = Sell OR Redeem.
-
-                    const type = isMint ? 'BUY' : 'SELL'; // We need to distinguish Sell vs Redeem.
-
-                    // We can check if the Market Contract was the caller? 
-                    // The log is from OutcomeToken.
-                    // But we don't see the `operator` (msg.sender) in the standard ERC1155 TransferSingle event, 
-                    // but here we have custom TokensMinted/Burned but they don't show operator.
-                    // BUT, the standard TransferSingle event DOES show operator.
-                    // Let's stick to the basic types for now.
-
-                    historyItems.push({
-                        type,
-                        marketId,
-                        outcome,
-                        shares: amountShares,
-                        amount: 0, // TODO: Fetch from Market event if needed
-                        timestamp: Number(block.timestamp),
-                        txHash: log.transactionHash
-                    });
+                        historyItems.push({
+                            type,
+                            marketId,
+                            outcome,
+                            shares: amountShares / 1e18, // outcome tokens are 18 decimals
+                            amount: 0, // Hard to get USDC amount without joining with ERC20 transfer
+                            timestamp: Number(tx.timeStamp),
+                            txHash: tx.hash
+                        });
+                    }
+                    setHistory(historyItems);
+                } else {
+                    console.log('ArcScan returned no results or error:', response.data.message);
+                    setHistory([]);
                 }
 
-                // Sort by time desc
-                historyItems.sort((a, b) => b.timestamp - a.timestamp);
-                setHistory(historyItems);
-
             } catch (error) {
-                console.error("Error fetching history:", error);
+                console.error("Error fetching history from ArcScan:", error);
             } finally {
                 setLoading(false);
             }
         }
 
         fetchHistory();
-    }, [userAddress, publicClient]);
+    }, [userAddress]);
 
     return { history, loading };
 }

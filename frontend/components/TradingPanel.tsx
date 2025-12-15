@@ -101,10 +101,11 @@ export default function TradingPanel({ marketId, yesPrice, noPrice, onTradeSucce
         ? marketAddressFromContract
         : null;
 
-    // 2. Get USDC Balance
-    const { data: usdcBalance } = useBalance({
+    // Get USDC balance (ERC20)
+    const { data: usdcBalance, refetch: refetchUSDC } = useBalance({
         address: address,
         chainId: arcTestnetChain.id,
+        token: CONTRACT_ADDRESSES.USDC as `0x${string}`, // Fetch ERC20 USDC balance, not Native ETH
     });
 
     // 3. Calculate Shares & Cost
@@ -166,6 +167,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice, onTradeSucce
     // Auto-buy after approval
     useEffect(() => {
         if (isApproveSuccess) {
+            refetchUSDC(); // Update balance (though unlikely to change on approval, good practice)
             refetchAllowance().then(() => {
                 if (shouldAutoBuy && marketAddress) {
                     const maxCost = cost > BigInt(0) ? cost * BigInt(101) / BigInt(100) : BigInt(0);
@@ -181,11 +183,13 @@ export default function TradingPanel({ marketId, yesPrice, noPrice, onTradeSucce
                 }
             });
         }
-    }, [isApproveSuccess, refetchAllowance, shouldAutoBuy, cost, marketAddress, selectedOutcome, sharesAmount, writeBuy]);
+    }, [isApproveSuccess, refetchAllowance, shouldAutoBuy, cost, marketAddress, selectedOutcome, sharesAmount, writeBuy, refetchUSDC]);
 
     // Handle Buy Success
     useEffect(() => {
         if (isBuySuccess) {
+            refetchUSDC(); // Update balance immediately
+
             if (onTradeSuccess && cost > BigInt(0)) {
                 onTradeSuccess(cost);
             }
@@ -198,7 +202,7 @@ export default function TradingPanel({ marketId, yesPrice, noPrice, onTradeSucce
             setAmount('');
             setShouldAutoBuy(false);
         }
-    }, [isBuySuccess]); // Keep dependencies minimal
+    }, [isBuySuccess, refetchUSDC]); // Keep dependencies minimal
 
     // Reset success states when amount changes
     useEffect(() => {

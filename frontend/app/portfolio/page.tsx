@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useConnect } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useConnect, usePublicClient, useBalance } from 'wagmi';
 import Link from 'next/link';
-import { usePortfolio } from '@/hooks/usePortfolio';
+import { usePortfolio, Position } from '@/hooks/usePortfolio';
 import { useTransactionHistory } from '@/hooks/useTransactionHistory';
-import { parseUnits } from 'viem';
+import { parseUnits, formatUnits } from 'viem';
 import WalletOptionsModal from '@/components/WalletOptionsModal';
+import { CONTRACT_ADDRESSES, arcTestnetChain } from '@/config/wagmi';
 
 const MARKET_ABI = [
     {
@@ -16,19 +17,55 @@ const MARKET_ABI = [
         stateMutability: 'nonpayable',
         type: 'function',
     },
+    {
+        inputs: [
+            { internalType: 'uint8', name: 'outcome', type: 'uint8' },
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+            { internalType: 'uint256', name: 'minPayout', type: 'uint256' }
+        ],
+        name: 'sellShares',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+    },
+    {
+        inputs: [
+            { internalType: 'uint8', name: 'outcome', type: 'uint8' },
+            { internalType: 'uint256', name: 'amount', type: 'uint256' }
+        ],
+        name: 'calculatePayout',
+        outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function',
+    },
 ] as const;
 
 export default function PortfolioPage() {
     const { address, isConnected } = useAccount();
     const { connect, connectors } = useConnect();
+    const publicClient = usePublicClient();
+
+    // Get USDC Balance
+    const { data: usdcBalance } = useBalance({
+        address: address,
+        chainId: arcTestnetChain.id,
+        token: CONTRACT_ADDRESSES.USDC as `0x${string}`,
+    });
+
     const [activeTab, setActiveTab] = useState<'active' | 'redeemable' | 'history'>('active');
+    // ... (lines 53-129 implied unchanged by jumping to end of block) ...
+    // Note: I cannot use "..." in replacement. I must replace a contiguous block.
+    // Since the hook is at the top and calculation is at the bottom, I should invoke this tool TWICE or use multi_replace.
+    // I will execute this tool for the TOP part (Hook) now.
+
     const [mounted, setMounted] = useState(false);
     const [showWalletOptions, setShowWalletOptions] = useState(false);
+    const [processingId, setProcessingId] = useState<string | null>(null); // marketId-outcome
 
-    const { positions, redeemable, isLoading } = usePortfolio();
+    const { positions, redeemable, isLoading, refetch } = usePortfolio();
 
-    // Redemption State
-    const { data: hash, writeContract, isPending } = useWriteContract();
+    // Transaction State
+    const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
     const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
         hash,
     });
@@ -38,19 +75,25 @@ export default function PortfolioPage() {
         setMounted(true);
     }, []);
 
+    // Refresh on success
+    useEffect(() => {
+        if (isSuccess) {
+            setProcessingId(null);
+            refetch?.();
+        }
+    }, [isSuccess, refetch]);
+
+    // Clear processing on error
+    useEffect(() => {
+        if (writeError) {
+            setProcessingId(null);
+            console.error("Transaction failed:", writeError);
+        }
+    }, [writeError]);
+
     const handleRedeem = (marketAddress: string, shares: number) => {
         try {
-            // Convert shares to 18 decimals (wei)
-            // Note: shares from hook are already formatted numbers, so we need to parse back
-            // But better to keep BigInt in hook? For now, let's assume precision is fine for UI actions
-            // or just redeem all.
-            // Actually, redeemShares takes uint256 amount.
-            // Let's use a safe conversion or fetch raw balance if needed.
-            // For MVP, parsing the number back to string is okay if we handle decimals carefully.
-            // Or better: just pass the raw BigInt from the hook if we exposed it.
-            // Since we didn't expose raw BigInt, let's re-parse.
-            const amount = parseUnits(shares.toString(), 18);
-
+            const amount = parseUnits(shares.toFixed(18), 18); // Use toFixed to avoid scientific notation
             writeContract({
                 address: marketAddress as `0x${string}`,
                 abi: MARKET_ABI,
@@ -62,11 +105,45 @@ export default function PortfolioPage() {
         }
     };
 
-    const totalValue = positions.reduce((sum, pos) => sum + pos.value, 0);
-    // P&L calculation is tricky without historical cost basis. 
-    // For MVP, we might show current value only or assume cost basis if we tracked it (we don't yet).
-    // So let's just show Value for now and hide P&L or set to 0.
-    const totalPnL = 0;
+    const handleSell = async (position: Position) => {
+        if (!publicClient) return;
+
+        const id = `${position.marketId}-${position.outcome}`;
+        setProcessingId(id);
+
+        try {
+            // 1. Calculate Payout
+            const amount = parseUnits(position.shares.toFixed(18), 18);
+            const outcomeId = position.outcome === 'YES' ? 0 : 1;
+
+            // @ts-ignore
+            const payout = await publicClient.readContract({
+                address: position.marketAddress as `0x${string}`,
+                abi: MARKET_ABI,
+                functionName: 'calculatePayout',
+                args: [outcomeId, amount]
+            }) as bigint;
+
+            // 2. Set minPayout with 1% slippage
+            const minPayout = payout * BigInt(99) / BigInt(100);
+
+            // 3. Sell
+            writeContract({
+                address: position.marketAddress as `0x${string}`,
+                abi: MARKET_ABI,
+                functionName: 'sellShares',
+                args: [outcomeId, amount, minPayout],
+            });
+
+        } catch (error) {
+            console.error("Sell failed:", error);
+            setProcessingId(null);
+        }
+    };
+
+    const positionValue = positions.reduce((sum, pos) => sum + pos.value, 0);
+    const cashBalance = usdcBalance ? parseFloat(usdcBalance.formatted) : 0;
+    const totalValue = positionValue + cashBalance;
 
     if (!mounted || !isConnected) {
         return (
@@ -107,18 +184,14 @@ export default function PortfolioPage() {
                     </p>
                 </div>
 
-                {/* Stats Cards - Mobile Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
                     <div className="card">
                         <p className="text-sm text-dark-muted mb-1">Total Value</p>
                         <p className="text-2xl sm:text-3xl font-bold text-primary-400">
                             ${totalValue.toFixed(2)}
-                        </p>
-                    </div>
-                    <div className="card">
-                        <p className="text-sm text-dark-muted mb-1">Total P&L</p>
-                        <p className="text-2xl sm:text-3xl font-bold text-dark-muted">
-                            --
+                            <span className="text-xs font-normal text-dark-muted block mt-1">
+                                ${cashBalance.toFixed(2)} Cash • ${positionValue.toFixed(2)} Active
+                            </span>
                         </p>
                     </div>
                     <div className="card">
@@ -127,15 +200,10 @@ export default function PortfolioPage() {
                             {positions.length}
                         </p>
                     </div>
-                    <div className="card">
-                        <p className="text-sm text-dark-muted mb-1">Redeemable</p>
-                        <p className="text-2xl sm:text-3xl font-bold text-yes">
-                            {redeemable.length}
-                        </p>
-                    </div>
+                    {/* ... other stats */}
                 </div>
 
-                {/* Tabs - Mobile Horizontal Scroll */}
+                {/* Tabs */}
                 <div className="mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
                     <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
                         <button
@@ -180,31 +248,46 @@ export default function PortfolioPage() {
                 {!isLoading && activeTab === 'active' && (
                     <div className="space-y-4">
                         {positions.map((position) => (
-                            <div key={`${position.marketId}-${position.outcome}`} className="card-hover">
-                                <Link href={`/market/${position.marketId}`}>
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                        <div className="flex-1">
-                                            <h3 className="font-bold mb-2 line-clamp-1">{position.question}</h3>
-                                            <div className="flex flex-wrap items-center gap-3 text-sm">
-                                                <span className={`px-3 py-1 rounded-lg font-semibold ${position.outcome === 'YES'
-                                                    ? 'bg-yes/20 text-yes'
-                                                    : 'bg-no/20 text-no'
-                                                    }`}>
-                                                    {position.outcome}
-                                                </span>
-                                                <span className="text-dark-muted">
-                                                    {position.shares.toFixed(2)} shares @ {(position.currentPrice * 100).toFixed(1)}¢
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex sm:flex-col items-center sm:items-end gap-4 sm:gap-2">
-                                            <div className="flex-1 sm:flex-none">
-                                                <p className="text-sm text-dark-muted mb-1">Value</p>
-                                                <p className="text-xl font-bold">${position.value.toFixed(2)}</p>
-                                            </div>
+                            <div key={`${position.marketId}-${position.outcome}`} className="card border dark:border-dark-border">
+                                <Link href={`/market/${position.marketId}`} className="block mb-4">
+                                    <h3 className="text-lg font-bold mb-2 hover:text-primary-400 transition-colors">{position.question}</h3>
+                                </Link>
+
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="flex-1">
+                                        <div className="flex flex-wrap items-center gap-3 text-sm">
+                                            <span className={`px-3 py-1 rounded-lg font-semibold ${position.outcome === 'YES'
+                                                ? 'bg-yes/20 text-yes'
+                                                : 'bg-no/20 text-no'
+                                                }`}>
+                                                {position.outcome}
+                                            </span>
+                                            <span className="text-dark-muted">
+                                                {position.shares.toFixed(2)} shares @ {(position.currentPrice * 100).toFixed(1)}¢
+                                            </span>
                                         </div>
                                     </div>
-                                </Link>
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-right">
+                                            <p className="text-sm text-dark-muted mb-1">Value</p>
+                                            <p className="text-xl font-bold">${position.value.toFixed(2)}</p>
+                                        </div>
+
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                handleSell(position);
+                                            }}
+                                            disabled={!!processingId || isPending || isConfirming}
+                                            className="btn bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20 px-4 py-2 text-sm disabled:opacity-50"
+                                        >
+                                            {processingId === `${position.marketId}-${position.outcome}`
+                                                ? 'Selling...'
+                                                : 'Cancel Buy'}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         ))}
 
@@ -227,12 +310,12 @@ export default function PortfolioPage() {
                     </div>
                 )}
 
-                {/* Redeemable */}
+                {/* Redeemable - Same as before */}
                 {!isLoading && activeTab === 'redeemable' && (
                     <div className="space-y-4">
-                        {isSuccess && (
+                        {isSuccess && !processingId && (
                             <div className="bg-green-500/10 border border-green-500/20 text-green-500 p-4 rounded-lg mb-4">
-                                Redemption successful! Check your wallet balance.
+                                Transaction successful!
                             </div>
                         )}
 
@@ -262,7 +345,7 @@ export default function PortfolioPage() {
                                             disabled={isPending || isConfirming}
                                             className="btn btn-yes px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            {isPending || isConfirming ? 'Redeeming...' : 'Redeem'}
+                                            {isPending || isConfirming ? 'Processing...' : 'Redeem'}
                                         </button>
                                     </div>
                                 </div>
@@ -271,15 +354,7 @@ export default function PortfolioPage() {
 
                         {redeemable.length === 0 && (
                             <div className="card text-center py-12">
-                                <div className="text-6xl mb-4 flex justify-center text-dark-muted">
-                                    <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
                                 <h3 className="text-xl font-bold mb-2">No redeemable positions</h3>
-                                <p className="text-dark-muted">
-                                    Winning positions will appear here when markets resolve
-                                </p>
                             </div>
                         )}
                     </div>
@@ -330,7 +405,7 @@ function HistoryList({ userAddress }: { userAddress?: string }) {
                 <div key={i} className="card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <div className={`p-2 rounded-lg ${item.type === 'BUY' ? 'bg-green-500/20 text-green-500' :
-                                item.type === 'SELL' ? 'bg-red-500/20 text-red-500' : 'bg-blue-500/20 text-blue-500'
+                            item.type === 'SELL' ? 'bg-red-500/20 text-red-500' : 'bg-blue-500/20 text-blue-500'
                             }`}>
                             {item.type === 'BUY' ? (
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

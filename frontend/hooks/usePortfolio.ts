@@ -123,7 +123,7 @@ export function usePortfolio() {
         });
     }
 
-    const { data: marketData, isLoading: isLoadingMarkets } = useReadContracts({
+    const { data: marketData, isLoading: isLoadingMarkets, refetch: refetchMarkets } = useReadContracts({
         contracts: contracts,
         query: {
             enabled: !!marketAddresses && !!address && marketAddresses.length > 0,
@@ -161,7 +161,7 @@ export function usePortfolio() {
         });
     }
 
-    const { data: balanceData, isLoading: isLoadingBalances } = useReadContracts({
+    const { data: balanceData, isLoading: isLoadingBalances, refetch: refetchBalances } = useReadContracts({
         contracts: balanceContracts,
         query: {
             enabled: !!marketAddresses && !!address && marketAddresses.length > 0,
@@ -266,9 +266,15 @@ export function usePortfolio() {
         }
     }, [address, isLoadingMarkets, isLoadingBalances, marketCount, marketAddresses, marketData, balanceData, positions.length]);
 
+    const refetch = () => {
+        refetchMarkets();
+        refetchBalances();
+    };
+
     return {
         positions,
         redeemable,
         isLoading: isLoadingMarkets || isLoadingBalances,
+        refetch,
     };
 }

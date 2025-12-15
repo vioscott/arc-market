@@ -1,88 +1,83 @@
+'use client';
+
+import React from 'react';
+
 export default function DocsPage() {
     return (
-        <div className="min-h-screen py-8 sm:py-12">
-            <div className="container-mobile max-w-4xl">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold mb-8">
-                    Documentation
-                </h1>
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+            <h1 className="text-4xl font-bold mb-8 gradient-text">Arc Prediction Market - User Guide</h1>
 
-                <div className="space-y-8">
-                    {/* Getting Started */}
-                    <section className="card">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="text-primary-400">
-                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                            </div>
-                            <h2 className="text-2xl font-bold">Getting Started</h2>
-                        </div>
-                        <div className="space-y-4 text-dark-muted">
-                            <div>
-                                <h3 className="font-semibold text-dark-text mb-2">1. Connect Your Wallet</h3>
-                                <p>Click "Connect Wallet" and select MetaMask or WalletConnect. Make sure you're on Arc Testnet.</p>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-dark-text mb-2">2. Get Testnet USDC</h3>
-                                <p>Visit the Circle Faucet or OmniHub to get free testnet USDC. You can request 1-5 USDC every 24 hours.</p>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-dark-text mb-2">3. Start Trading</h3>
-                                <p>Browse markets, select YES or NO, enter your amount, and execute the trade!</p>
-                            </div>
-                        </div>
-                    </section>
+            <div className="space-y-12">
+                {/* Section 1: Getting Started */}
+                <section className="card p-8 space-y-6">
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 text-sm">1</span>
+                        Getting Started on Testnet
+                    </h2>
+                    <p className="text-gray-400">
+                        To trade on the Arc Prediction Market (Testnet), you need two things:
+                    </p>
+                    <ul className="list-disc list-inside space-y-2 text-gray-300 ml-4">
+                        <li><strong className="text-orange-400">Arc ETH (`ARC`)</strong>: This is the &quot;Gas&quot; token used to pay for transaction fees on the network.</li>
+                        <li><strong className="text-blue-400">USDC (`MockUSDC`)</strong>: This is the &quot;Betting&quot; token used to buy and sell shares.</li>
+                    </ul>
 
-                    {/* How It Works */}
-                    <section className="card">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="text-primary-400">
-                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            </div>
-                            <h2 className="text-2xl font-bold">How It Works</h2>
+                    <div className="grid md:grid-cols-3 gap-6 mt-6">
+                        <div className="bg-dark-bg p-4 rounded-xl border border-dark-border">
+                            <h3 className="font-bold text-white mb-2">Step 1: Connect</h3>
+                            <p className="text-sm text-gray-400">Click <strong>&quot;Connect Wallet&quot;</strong>. Ensure you are on the <strong>Arc Testnet</strong>.</p>
                         </div>
-                        <div className="space-y-4 text-dark-muted">
-                            <p>
-                                Arc Prediction Market uses a Logarithmic Market Scoring Rule (LMSR) automated market maker to price YES/NO outcome shares.
-                            </p>
-                            <p>
-                                When you buy shares, the price increases. When you sell, the price decreases. Prices always reflect the market's collective probability estimate.
-                            </p>
-                            <p>
-                                When a market resolves, winning shares can be redeemed for 1 USDC each. Losing shares become worthless.
-                            </p>
+                        <div className="bg-dark-bg p-4 rounded-xl border border-dark-border">
+                            <h3 className="font-bold text-white mb-2">Step 2: Get Gas</h3>
+                            <p className="text-sm text-gray-400">Visit the <a href="https://faucet.circle.com/" target="_blank" className="text-blue-400 hover:underline">Arc Testnet Faucet</a> to get ARC USDC for fees.</p>
                         </div>
-                    </section>
+                        <div className="bg-dark-bg p-4 rounded-xl border border-dark-border">
+                            <h3 className="font-bold text-white mb-2">Step 3: Get USDC</h3>
+                            <p className="text-sm text-gray-400">Click your <strong>Wallet Address</strong> top-right. If your balance is low, click <strong>&quot;Get 1000 USDC&quot;</strong>.</p>
+                        </div>
+                    </div>
+                </section>
 
-                    {/* FAQ */}
-                    <section className="card">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="text-primary-400">
-                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <h2 className="text-2xl font-bold">FAQ</h2>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <h3 className="font-semibold mb-2">Is this real money?</h3>
-                                <p className="text-dark-muted">No! This is 100% testnet. All USDC is testnet currency with no real value.</p>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold mb-2">How are markets resolved?</h3>
-                                <p className="text-dark-muted">Markets are resolved by a multi-signature oracle system with time-locks and dispute mechanisms.</p>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold mb-2">Can I create my own market?</h3>
-                                <p className="text-dark-muted">Yes! Click "Create" and fill out the form. You'll need to provide initial liquidity.</p>
-                            </div>
-                        </div>
-                    </section>
-                </div>
+                {/* Section 2: How to Trade */}
+                <section className="card p-8 space-y-6">
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 text-sm">2</span>
+                        How to Trade
+                    </h2>
+
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-semibold text-white">Buying Shares</h3>
+                        <ol className="list-decimal list-inside space-y-3 text-gray-300 ml-4">
+                            <li>Select a Market (e.g., &quot;Will Nuggets beat Celtics?&quot;).</li>
+                            <li>Choose your outcome: <strong className="text-yes">YES</strong> or <strong className="text-no">NO</strong>.</li>
+                            <li>Enter the amount of <strong>USDC</strong> you want to invest.</li>
+                            <li>Click <strong>&quot;Buy Shares&quot;</strong>.</li>
+                            <li><strong>Approve USDC</strong> (First time only) & Confirm the transaction.</li>
+                        </ol>
+                    </div>
+
+                    <div className="border-t border-dark-border pt-6 mt-6 space-y-4">
+                        <h3 className="text-xl font-semibold text-white">Selling / Redeeming</h3>
+                        <ol className="list-decimal list-inside space-y-3 text-gray-300 ml-4">
+                            <li>Go to <strong>&quot;Portfolio&quot;</strong> to view your positions.</li>
+                            <li>If a market resolves and you won, the position moves to <strong>&quot;Redeemable&quot;</strong>.</li>
+                            <li>Click <strong>&quot;Redeem&quot;</strong> to swap your winning shares back for USDC (1 Share = 1 USDC).</li>
+                        </ol>
+                    </div>
+                </section>
+
+                {/* Section 3: History */}
+                <section className="card p-8 space-y-6">
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500/20 text-green-400 text-sm">3</span>
+                        Viewing History
+                    </h2>
+                    <p className="text-gray-400">
+                        You can check your past transactions in the <strong>Portfolio</strong> tab, under <strong>&quot;History&quot;</strong>.
+                        <br />
+                        This pulls data directly from the <strong className="text-blue-400">ArcScan Explorer</strong>, ensuring you see exactly what happened on-chain.
+                    </p>
+                </section>
             </div>
         </div>
     );
