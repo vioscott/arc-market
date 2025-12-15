@@ -659,6 +659,102 @@
         "Technology",
         "gdelt"
       ]
+    },
+    "21": {
+      "marketId": 21,
+      "marketAddress": "0x50bf5e14cA8AB87f2F9edf4dA9472Cb1cD7B9c5A",
+      "question": "Will Warriors beat Mavericks on 17/12/2025?",
+      "category": "Sports",
+      "sourceUrl": "https://www.nba.com",
+      "closeTime": 1765943277,
+      "createdAt": 1765770480,
+      "liquidityParameter": "100",
+      "eventId": "nba-Warriors-Mavericks-1765943277",
+      "eventType": "sports",
+      "eventData": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Warriors",
+        "awayTeam": "Mavericks",
+        "gameTime": 1765943277
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0xa5c2Ef5D0007fCD7Fa99d12148F8D30ECE537FfD",
+      "tags": [
+        "Sports",
+        "sports"
+      ]
+    },
+    "22": {
+      "marketId": 22,
+      "marketAddress": "0x1cF9033f026924Ac4d48837B27c2F2977f230Fe8",
+      "question": "Will Clippers beat 76ers on 18/12/2025?",
+      "category": "Sports",
+      "sourceUrl": "https://www.nba.com",
+      "closeTime": 1766029677,
+      "createdAt": 1765770483,
+      "liquidityParameter": "100",
+      "eventId": "nba-Clippers-76ers-1766029677",
+      "eventType": "sports",
+      "eventData": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Clippers",
+        "awayTeam": "76ers",
+        "gameTime": 1766029677
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0xa5c2Ef5D0007fCD7Fa99d12148F8D30ECE537FfD",
+      "tags": [
+        "Sports",
+        "sports"
+      ]
+    },
+    "23": {
+      "marketId": 23,
+      "marketAddress": "0x6F6705cd9Ff4E9B6ace6C94B81e86Dba38C6e17d",
+      "question": "Will Nuggets beat Celtics on 19/12/2025?",
+      "category": "Sports",
+      "sourceUrl": "https://www.nba.com",
+      "closeTime": 1766116077,
+      "createdAt": 1765770487,
+      "liquidityParameter": "100",
+      "eventId": "nba-Nuggets-Celtics-1766116077",
+      "eventType": "sports",
+      "eventData": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Nuggets",
+        "awayTeam": "Celtics",
+        "gameTime": 1766116077
+      },
+      "status": "active",
+      "winningOutcome": null,
+      "resolvedAt": null,
+      "yesShares": "0",
+      "noShares": "0",
+      "yesPrice": 0.5,
+      "noPrice": 0.5,
+      "volume": "0",
+      "creator": "0xa5c2Ef5D0007fCD7Fa99d12148F8D30ECE537FfD",
+      "tags": [
+        "Sports",
+        "sports"
+      ]
     }
   },
   "events": {
@@ -1582,12 +1678,63 @@
         "mock": true
       },
       "fetchedAt": 1765250637949
+    },
+    "nba-Warriors-Mavericks-1765943277": {
+      "eventId": "nba-Warriors-Mavericks-1765943277",
+      "eventType": "sports",
+      "source": "mock-nba",
+      "question": "Will Warriors beat Mavericks on 17/12/2025?",
+      "category": "Sports",
+      "closeTime": 1765943277,
+      "sourceUrl": "https://www.nba.com",
+      "metadata": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Warriors",
+        "awayTeam": "Mavericks",
+        "gameTime": 1765943277
+      },
+      "fetchedAt": 1765770480201
+    },
+    "nba-Clippers-76ers-1766029677": {
+      "eventId": "nba-Clippers-76ers-1766029677",
+      "eventType": "sports",
+      "source": "mock-nba",
+      "question": "Will Clippers beat 76ers on 18/12/2025?",
+      "category": "Sports",
+      "closeTime": 1766029677,
+      "sourceUrl": "https://www.nba.com",
+      "metadata": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Clippers",
+        "awayTeam": "76ers",
+        "gameTime": 1766029677
+      },
+      "fetchedAt": 1765770483840
+    },
+    "nba-Nuggets-Celtics-1766116077": {
+      "eventId": "nba-Nuggets-Celtics-1766116077",
+      "eventType": "sports",
+      "source": "mock-nba",
+      "question": "Will Nuggets beat Celtics on 19/12/2025?",
+      "category": "Sports",
+      "closeTime": 1766116077,
+      "sourceUrl": "https://www.nba.com",
+      "metadata": {
+        "sport": "basketball",
+        "league": "NBA",
+        "homeTeam": "Nuggets",
+        "awayTeam": "Celtics",
+        "gameTime": 1766116077
+      },
+      "fetchedAt": 1765770487039
     }
   },
   "resolutions": {},
   "metadata": {
     "version": "1.0.0",
     "createdAt": 1764940266779,
-    "lastUpdated": 1765250637949
+    "lastUpdated": 1765770487039
   }
 }

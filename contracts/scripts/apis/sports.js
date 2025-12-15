@@ -81,7 +81,7 @@ export async function getSportsResult(eventId, metadata) {
  * Real API-Sports integration (requires API key)
  * Uncomment and configure when you have an API key
  */
-/*
+
 export async function fetchSportsEventsReal() {
     if (!API_CONFIG.sportsApi.enabled) {
         console.log('⚠️  Sports API disabled (no API key)');
@@ -98,25 +98,32 @@ export async function fetchSportsEventsReal() {
                 },
                 params: {
                     league: 39, // Premier League
-                    season: 2024,
+                    season: 2025, // Current season for Dec 2025
                     next: 10, // Next 10 fixtures
                 },
             }
         );
+
+        // Debug logging
+        if ((response.data.errors && Object.keys(response.data.errors).length > 0) || response.data.results === 0) {
+            console.error('⚠️  API-Sports Limit/Error:', JSON.stringify(response.data.errors || 'No results'));
+            console.log('⚠️  Falling back to MOCK data...');
+            return await fetchSportsEvents();
+        }
 
         const fixtures = response.data.response;
         const events = [];
 
         for (const fixture of fixtures) {
             const gameTime = Math.floor(new Date(fixture.fixture.date).getTime() / 1000);
-            
+
             events.push({
                 eventId: `football-${fixture.fixture.id}`,
                 eventType: 'sports',
                 source: 'api-sports',
                 question: `Will ${fixture.teams.home.name} beat ${fixture.teams.away.name}?`,
                 category: CATEGORIES.SPORTS,
-                deadline: gameTime,
+                closeTime: gameTime, // Changed 'deadline' to 'closeTime' to match schema
                 sourceUrl: `https://www.api-sports.io`,
                 metadata: {
                     sport: 'football',
@@ -128,10 +135,15 @@ export async function fetchSportsEventsReal() {
             });
         }
 
+        console.log(`✅ Fetched ${events.length} live sports events`);
         return events;
+
     } catch (error) {
         console.error('❌ Error fetching sports events:', error.message);
-        return [];
+
+        // Fallback to mock data if API limits are hit or key is invalid
+        console.error('⚠️  Falling back to MOCK data due to API error/limits...');
+        return await fetchSportsEvents();
     }
 }
-*/
+
