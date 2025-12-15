@@ -2,6 +2,8 @@
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useReadContracts, useReadContract } from 'wagmi';
+import { formatUnits } from 'viem';
 import Link from 'next/link';
 import TradingPanel from '@/components/TradingPanel';
 import ClaimPanel from '@/components/ClaimPanel';
@@ -14,6 +16,45 @@ export default function MarketDetailPage() {
     const marketId = params ? parseInt(params.id as string) : 0;
     const [market, setMarket] = useState<Market | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Hooks must be at the top level
+    const { data: marketData } = useReadContract({
+        address: market?.marketAddress as `0x${string}`,
+        abi: [
+            { name: 'liquidityParameter', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
+            { name: 'getPrice', type: 'function', stateMutability: 'view', inputs: [{ type: 'uint8' }], outputs: [{ type: 'uint256' }] },
+        ],
+        functionName: 'liquidityParameter',
+        query: {
+            enabled: !!market?.marketAddress
+        }
+    });
+
+    const { data: onChainData } = useReadContracts({
+        contracts: [
+            {
+                address: market?.marketAddress as `0x${string}`,
+                abi: [{ name: 'liquidityParameter', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] }] as const,
+                functionName: 'liquidityParameter',
+            },
+            {
+                address: market?.marketAddress as `0x${string}`,
+                abi: [{ name: 'getPrice', type: 'function', stateMutability: 'view', inputs: [{ type: 'uint8' }], outputs: [{ type: 'uint256' }] }] as const,
+                functionName: 'getPrice',
+                args: [0], // YES
+            },
+            {
+                address: market?.marketAddress as `0x${string}`,
+                abi: [{ name: 'getPrice', type: 'function', stateMutability: 'view', inputs: [{ type: 'uint8' }], outputs: [{ type: 'uint256' }] }] as const,
+                functionName: 'getPrice',
+                args: [1], // NO
+            }
+        ],
+        query: {
+            enabled: !!market?.marketAddress,
+            refetchInterval: 5000
+        }
+    });
 
     useEffect(() => {
         async function fetchMarket() {
@@ -31,6 +72,18 @@ export default function MarketDetailPage() {
 
         fetchMarket();
     }, [marketId]);
+
+    // Derived state
+    const liquidityParam = onChainData?.[0]?.result as bigint;
+    const liveYesPrice = onChainData?.[1]?.result as bigint;
+    const liveNoPrice = onChainData?.[2]?.result as bigint;
+
+    const yesPrice = liveYesPrice ? Number(formatUnits(liveYesPrice, 18)) : (market?.yesPrice || 0.5);
+    const noPrice = liveNoPrice ? Number(formatUnits(liveNoPrice, 18)) : (market?.noPrice || 0.5);
+    const liquidityDisplay = liquidityParam ? Number(formatUnits(liquidityParam, 18)) : (Number(market?.liquidityParameter || 0) / 1e18);
+
+    const timeRemaining = formatTimeRemaining(market?.closeTime || 0);
+    const marketStatus = getMarketStatus(market?.closeTime || 0, market?.status === 'resolved');
 
     if (loading) {
         return (
@@ -53,11 +106,6 @@ export default function MarketDetailPage() {
             </div>
         );
     }
-
-    const yesPrice = market.yesPrice || 0.5;
-    const noPrice = market.noPrice || 0.5;
-    const timeRemaining = formatTimeRemaining(market.closeTime);
-    const marketStatus = getMarketStatus(market.closeTime, market.status === 'resolved');
 
     const getCategoryColor = (cat: string) => {
         const colors: Record<string, string> = {
@@ -142,7 +190,7 @@ export default function MarketDetailPage() {
                                 </div>
                                 <div>
                                     <div className="text-sm text-gray-400 mb-1">Liquidity</div>
-                                    <div className="text-xl font-bold text-white">${(Number(market.liquidityParameter || 0) / 1e18).toFixed(0)}</div>
+                                    <div className="text-xl font-bold text-white">${liquidityDisplay.toFixed(0)}</div>
                                 </div>
                                 <div>
                                     <div className="text-sm text-gray-400 mb-1">Status</div>

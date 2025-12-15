@@ -1,4 +1,5 @@
 
+import { useEffect } from 'react';
 import { useAccount, useReadContract, useReadContracts } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '@/config/wagmi';
 import { formatUnits } from 'viem';
@@ -107,8 +108,11 @@ export function usePortfolio() {
     // 3. Prepare contract reads for all markets
     // We need: MarketId, Question, State, WinningOutcome, Prices, YES Balance, NO Balance
     const contracts: any[] = [];
-    if (marketAddresses && address) {
-        marketAddresses.forEach((marketAddr) => {
+    // Dedup addresses to prevent duplicate keys
+    const uniqueMarketAddresses = marketAddresses ? Array.from(new Set(marketAddresses)) : [];
+
+    if (uniqueMarketAddresses && address) {
+        uniqueMarketAddresses.forEach((marketAddr) => {
             // Market details
             contracts.push({ address: marketAddr, abi: MARKET_ABI, functionName: 'marketId' });
             contracts.push({ address: marketAddr, abi: MARKET_ABI, functionName: 'question' });
@@ -139,8 +143,8 @@ export function usePortfolio() {
     // MarketFactory assigns marketId = markets.length. So yes, index i has marketId i.
 
     const balanceContracts: any[] = [];
-    if (marketAddresses && address) {
-        marketAddresses.forEach((_, index) => {
+    if (uniqueMarketAddresses && address) {
+        uniqueMarketAddresses.forEach((_, index) => {
             const marketId = index; // Assumption based on MarketFactory logic
             balanceContracts.push({
                 address: CONTRACT_ADDRESSES.OutcomeToken as `0x${string}`,
@@ -168,8 +172,8 @@ export function usePortfolio() {
     const positions: Position[] = [];
     const redeemable: Position[] = [];
 
-    if (marketAddresses && marketData && balanceData && address) {
-        marketAddresses.forEach((marketAddr, index) => {
+    if (uniqueMarketAddresses && marketData && balanceData && address) {
+        uniqueMarketAddresses.forEach((marketAddr, index) => {
             const baseIndex = index * 6; // 6 calls per market in marketData
             const balanceBaseIndex = index * 2; // 2 calls per market in balanceData
 
@@ -235,6 +239,32 @@ export function usePortfolio() {
             }
         });
     }
+
+    // Debug logging
+    useEffect(() => {
+        if (address) {
+            console.log('Portfolio Debug:', {
+                isLoadingMarkets,
+                isLoadingBalances,
+                marketCount: marketCount?.toString(),
+                marketAddressesLength: marketAddresses?.length,
+                marketDataLength: marketData?.length,
+                balanceDataLength: balanceData?.length,
+                positionsLength: positions.length,
+            });
+
+            if (balanceData && balanceData.length > 0) {
+                balanceData.forEach((b: any, i: number) => {
+                    // Check if 'result' or 'error' exists
+                    if (b.status === 'success' && Number(b.result) > 0) {
+                        console.log(`Balance Found: Index ${i}, Val ${b.result}, Formatted: ${formatUnits(b.result, 18)}`);
+                    } else if (b.status === 'failure') {
+                        console.error(`Balance Fetch Failed: Index ${i}`, b.error);
+                    }
+                });
+            }
+        }
+    }, [address, isLoadingMarkets, isLoadingBalances, marketCount, marketAddresses, marketData, balanceData, positions.length]);
 
     return {
         positions,

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useConnect } from 'wagmi';
 import Link from 'next/link';
 import { usePortfolio } from '@/hooks/usePortfolio';
+import { useTransactionHistory } from '@/hooks/useTransactionHistory';
 import { parseUnits } from 'viem';
 import WalletOptionsModal from '@/components/WalletOptionsModal';
 
@@ -286,16 +287,8 @@ export default function PortfolioPage() {
 
                 {/* History */}
                 {!isLoading && activeTab === 'history' && (
-                    <div className="card text-center py-12">
-                        <div className="text-6xl mb-4 flex justify-center text-dark-muted">
-                            <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <h3 className="text-xl font-bold mb-2">Transaction History</h3>
-                        <p className="text-dark-muted">
-                            Coming soon: View your full trading history
-                        </p>
+                    <div className="space-y-4">
+                        <HistoryList userAddress={address} />
                     </div>
                 )}
 
@@ -307,6 +300,72 @@ export default function PortfolioPage() {
                 connectors={connectors}
                 connect={connect}
             />
+        </div>
+    );
+}
+
+function HistoryList({ userAddress }: { userAddress?: string }) {
+    const { history, loading } = useTransactionHistory(userAddress);
+
+    if (loading) {
+        return (
+            <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                <p className="text-dark-muted">Loading history...</p>
+            </div>
+        );
+    }
+
+    if (history.length === 0) {
+        return (
+            <div className="card text-center py-12">
+                <p className="text-dark-muted">No transaction history found</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-3">
+            {history.map((item, i) => (
+                <div key={i} className="card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-lg ${item.type === 'BUY' ? 'bg-green-500/20 text-green-500' :
+                                item.type === 'SELL' ? 'bg-red-500/20 text-red-500' : 'bg-blue-500/20 text-blue-500'
+                            }`}>
+                            {item.type === 'BUY' ? (
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                            ) : (
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                                </svg>
+                            )}
+                        </div>
+                        <div>
+                            <div className="font-bold">
+                                {item.type} {item.outcome} Shares
+                            </div>
+                            <div className="text-sm text-dark-muted">
+                                Market #{item.marketId} • {new Date(item.timestamp * 1000).toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <div className="font-bold text-lg">
+                            {item.shares.toFixed(2)} Shares
+                        </div>
+                        <a
+                            href={`https://testnet.arcscan.app/tx/${item.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary-400 hover:text-primary-300"
+                        >
+                            View Transaction ↗
+                        </a>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }
